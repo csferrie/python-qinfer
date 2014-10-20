@@ -43,14 +43,12 @@ import warnings
 
 import numpy as np
 
-from itertools import izip
-
 from scipy.spatial import Delaunay
 import scipy.linalg as la
 import scipy.stats
-import scipy.interpolate
 from scipy.ndimage.filters import gaussian_filter1d
 
+from qinfer.abstract_updater import Updater
 from qinfer.abstract_model import DifferentiableModel
 from qinfer.metrics import rescaled_distance_mtx
 from qinfer.distributions import Distribution
@@ -76,7 +74,7 @@ logger.addHandler(logging.NullHandler())
 
 ## CLASSES #####################################################################
 
-class SMCUpdater(Distribution):
+class SMCUpdater(Updater):
     r"""
     Creates a new Sequential Monte carlo updater, using the algorithm of
     [GFWC12]_.
@@ -99,6 +97,9 @@ class SMCUpdater(Distribution):
     :param float zero_weight_thresh: Value to be used when testing for the
         zero-weight condition.
     """
+    
+    _resample_count = 0
+    
     def __init__(self,
             model, n_particles, prior,
             resample_a=None, resampler=None, resample_thresh=0.5,
@@ -106,6 +107,8 @@ class SMCUpdater(Distribution):
             track_resampling_divergence=False,
             zero_weight_policy='error', zero_weight_thresh=None
             ):
+            
+        super(SMCUpdater, self).__init__()
 
         # Initialize zero-element arrays such that n_particles is always
         # a valid property.
@@ -218,14 +221,6 @@ class SMCUpdater(Distribution):
         """
         return 1 / (np.sum(self.particle_weights**2))
 
-    @property
-    def data_record(self):
-        """
-        List of outcomes given to :meth:`~SMCUpdater.update`.
-        """
-        # We use [:] to force a new list to be made, decoupling
-        # this property from the caller.
-        return self._data_record[:]
         
     @property
     def resampling_divergences(self):
@@ -266,6 +261,7 @@ class SMCUpdater(Distribution):
             be set if ``n_particles`` is also given.
         :param bool reset_weights: Resets the weights as well as the particles.
         """
+        
         # Particles are stored using two arrays, particle_locations and
         # particle_weights, such that:
         # 
@@ -276,7 +272,7 @@ class SMCUpdater(Distribution):
         
         if n_particles is not None and only_params is not None:
             raise ValueError("Cannot set both n_particles and only_params.")
-        
+            
         if n_particles is None:
             n_particles = self.n_particles
         
@@ -377,9 +373,8 @@ class SMCUpdater(Distribution):
             a resampling step may be performed.
         """
 
-        # First, record the outcome.
-        # TODO: record the experiment as well.
-        self._data_record.append(outcome)
+        # First, let the base class handle data/experiment records.
+        super(SMCUpdater, self).update(outcome, expparams)
         self._just_resampled = False
 
         # Perform the update. 
@@ -1303,4 +1298,3 @@ class SMCUpdaterABC(SMCUpdater):
         if check_for_resample:
             self._maybe_resample()
 
-    
