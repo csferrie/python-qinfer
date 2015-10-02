@@ -1,8 +1,7 @@
 numpy
 scipy
+matplotlib
 scikit-learn
-ipython
-PySide
 pytest
 pytest-cov
 pytest-xdist
