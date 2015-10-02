@@ -21,7 +21,7 @@ install:
   - cd ./src/qinfer
 
 script:
-  - py.test --cov-config .coveragec
+  - nosetests --with-coverage --cover-package=qinfer qinfer
 
 after_success:
-  coveralls
+  - coveralls
