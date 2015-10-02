@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ##
-# _lib/: Copies of external libraries used by QInfer, such as docopt.
+# lib/: Copies of external libraries used by QInfer, such as docopt.
 #        Note that all other files in this directory are copyrighted and
 #        licensed as described within each file, or by the corresponding
 #        LICENSE and/or COPYING files.

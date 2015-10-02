@@ -39,6 +39,24 @@ and a uniform prior :math:`\omega \sim \text{Uni}(0, 1)`:
 
 >>> from qinfer.smc import SMCUpdater
 >>> from qinfer.distributions import UniformDistribution
+>>> from qinfer.example_models import SimplePrecessionModel
+>>> model = SimplePrecessionModel()
+>>> prior = UniformDistribution([0, 1])
+>>> updater = SMCUpdater(model, 1000, prior)
+
+
+
+>>> from qinfer.smc import SMCUpdater
+>>> from qinfer.distributions import UniformDistribution
+>>> from qinfer.example_models import SimplePrecessionModel
+>>> model = SimplePrecessionModel()
+>>> prior = UniformDistribution([0, 1])
+>>> updater = SMCUpdater(model, 1000, prior)
+
+
+
+>>> from qinfer.smc import SMCUpdater
+>>> from qinfer.distributions import UniformDistribution
 >>> from qinfer.test_models import SimplePrecessionModel
 >>> model = SimplePrecessionModel()
 >>> prior = UniformDistribution([0, 1])

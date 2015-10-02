@@ -56,7 +56,7 @@ import sys
 from qinfer import distributions, ale
 from qinfer.smc import SMCUpdater
 from qinfer.tomography import QubitStatePauliModel
-from qinfer._lib import docopt
+from qinfer.lib import docopt
 
 try:
     from .. import dialogs

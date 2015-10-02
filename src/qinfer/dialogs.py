@@ -52,7 +52,7 @@ import socket
 import warnings
 from itertools import count
 
-from qinfer._lib import enum # <- TODO: replace with flufl.enum
+from qinfer.lib import enum # <- TODO: replace with flufl.enum
 
 ## FUNCTIONS ##################################################################
 

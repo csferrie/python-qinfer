@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ##
-# perf_testing.py: Tests the performance of SMC estimation and likelihood
+# perf_evaluation.py: Tests the performance of SMC estimation and likelihood
 #     calls.
 ##
 # © 2014 Chris Ferrie (csferrie@gmail.com) and
