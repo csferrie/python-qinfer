@@ -1,8 +1,11 @@
 numpy
 scipy
-coveralls
 matplotlib
 scikit-learn
+ipython
+
 pytest
 pytest-cov
 pytest-xdist
+
+coveralls
