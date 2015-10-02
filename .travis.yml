@@ -17,7 +17,8 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 
 install:
-  - conda create -n build_env python=$TRAVIS_PYTHON_VERSION --file requirements.txt
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib nose
+  - pip install -r requirements.txt
   - python setup.py install
 
 script:
