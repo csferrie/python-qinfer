@@ -1,3 +1,4 @@
+sudo: false
 language: python
 python:
   - "2.7"
@@ -23,3 +24,6 @@ install:
 
 script:
   - py.test --cov-config .coveragec
+
+after_success:
+  coveralls
