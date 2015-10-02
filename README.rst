@@ -5,6 +5,17 @@ Welcome to QInfer
 **QInfer** is a library using Bayesian sequential Monte Carlo for quantum
 parameter estimation.
 
+Build Status and Code Coverage
+==============================
+
+.. image:: https://travis-ci.org/MichalKononenko/python-qinfer.svg?branch=master
+    :target: https://travis-ci.org/MichalKononenko/python-qinfer
+
+.. image:: https://coveralls.io/repos/MichalKononenko/python-qinfer/badge.svg?branch=master&service=github
+    :target: https://coveralls.io/github/MichalKononenko/python-qinfer?branch=master
+
+
+
 Obtaining QInfer
 ================
 

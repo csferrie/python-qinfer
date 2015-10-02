@@ -49,6 +49,7 @@ from qinfer._exceptions import ApproximationWarning
 
 ## FUNCTIONS ##################################################################
 
+
 def binom_est_p(n, N, hedge=float(0)):
     r"""
     Given a number of successes :math:`n` and a number of trials :math:`N`,
@@ -64,15 +65,25 @@ def binom_est_p(n, N, hedge=float(0)):
         value of :math:`n`.
     """
     return (n + hedge) / (N + 2 * hedge)
-    
+
+
 def binom_est_error(p, N, hedge = float(0)):
     r"""
+    Given a probability of success :math:`p` and a number of trials :math:`N`,
+    estimates the error in estimation of :math:`p` using a hedged estimator
+
+    :param float p: Probability of success
+    :param int N: The number of trials
+    :param float hedge: Hedging parameter :math:`\beta`
+    :rtype: float or `numpy.ndarray`
+    :return: The estimated error in the parameter :math:`p` for each value of
+        :math:`p`
     """
-    
     # asymptotic np.sqrt(p * (1 - p) / N)
     return np.sqrt(p*(1-p)/(N+2*hedge+1))
 
 ## CLASSES ####################################################################
+
 
 class ALEApproximateModel(Model):
     r"""
