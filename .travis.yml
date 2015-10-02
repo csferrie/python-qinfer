@@ -16,7 +16,8 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib nose
+  - export PATH=./src:$PATH
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib nose pip cython
   - pip install -r requirements.txt
   - python setup.py install
 
