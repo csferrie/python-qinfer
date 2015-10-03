@@ -45,7 +45,7 @@ from scipy.stats import binom
 
 from qinfer.utils import binomial_pdf
 from qinfer.abstract_model import Model, DifferentiableModel
-from qinfer._lib import enum # <- TODO: replace with flufl.enum!
+from qinfer.lib import enum # <- TODO: replace with flufl.enum!
 from qinfer.ale import binom_est_error
     
 ## CLASSES #####################################################################
@@ -380,7 +380,7 @@ class RandomWalkModel(DerivedModel):
 if __name__ == "__main__":
     
     import operator as op
-    from test_models import SimplePrecessionModel
+    from example_models import SimplePrecessionModel
     
     m = BinomialModel(SimplePrecessionModel())
     

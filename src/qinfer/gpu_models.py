@@ -55,7 +55,7 @@ import numpy.linalg as la
 import time
 
 from qinfer.abstract_model import Model
-from qinfer.test_models import SimplePrecessionModel
+from qinfer.example_models import SimplePrecessionModel
 from qinfer.smc import SMCUpdater
 from qinfer.distributions import UniformDistribution
 

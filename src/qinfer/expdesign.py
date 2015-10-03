@@ -45,7 +45,7 @@ import numpy as np
 
 # for BCRB and BED classes
 import scipy.optimize as opt
-from qinfer._lib import enum # <- TODO: replace with flufl.enum!
+from qinfer.lib import enum # <- TODO: replace with flufl.enum!
 
 from abc import ABCMeta, abstractmethod
 import warnings

@@ -73,7 +73,7 @@ from ..resamplers import LiuWestResampler, ClusteringResampler
 from ..utils import mvee, uniquify
 
 ## External libraries bundled with QInfer. ##
-from .._lib import docopt
+from ..lib import docopt
 
 ## CLASSES #####################################################################
 

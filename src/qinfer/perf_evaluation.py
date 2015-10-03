@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ##
-# perf_testing.py: Tests the performance of SMC estimation and likelihood
+# perf_evaluation.py: Tests the performance of SMC estimation and likelihood
 #     calls.
 ##
 # © 2014 Chris Ferrie (csferrie@gmail.com) and
@@ -30,7 +30,7 @@ from __future__ import division
 ## EXPORTS ###################################################################
 
 __all__ = [
-    'timing', 'perf_test', 'perf_test_multiple'
+    'timing', 'perf_trial', 'perf_eval_multiple'
 ]
 
 ## IMPORTS ###################################################################
@@ -146,7 +146,7 @@ def actual_dtype(model):
     else:
         return PERFORMANCE_DTYPE + model_dtype + model.expparams_dtype, False
 
-def perf_test(
+def perf_trial(
         model, n_particles, prior, n_exp, heuristic_class,
         true_model=None, true_prior=None, true_mps=None,
         extra_updater_args=None
@@ -246,7 +246,7 @@ class apply_serial(object):
 
         return self._value
 
-def perf_test_multiple(
+def perf_eval_multiple(
         n_trials,
         model, n_particles, prior,
         n_exp, heuristic_class,
@@ -259,7 +259,7 @@ def perf_test_multiple(
     ):
     # TODO: write full docstring, but this repeats many times.
 
-    trial_fn = partial(perf_test,
+    trial_fn = partial(perf_trial,
         model, n_particles, prior,
         n_exp, heuristic_class, true_model, true_prior,
         extra_updater_args=extra_updater_args
