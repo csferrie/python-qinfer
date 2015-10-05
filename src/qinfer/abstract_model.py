@@ -23,12 +23,21 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
+"""
+Contains definitions for the abstract model for which parameters are to be
+learned
+"""
 
-## FEATURES ##################################################################
+# FEATURES ###################################################################
 
 from __future__ import division, unicode_literals
 
-## EXPORTS ###################################################################
+# IMPORTS ####################################################################
+
+import abc  # Python standard library package for specifying abstract classes.
+import numpy as np
+
+# EXPORTS ####################################################################
 
 __all__ = [
     'Simulatable',
@@ -36,26 +45,29 @@ __all__ = [
     'DifferentiableModel'
 ]
 
-## IMPORTS ###################################################################
+# CLASSES ###################################################################
 
-import abc
-    # Python standard library package for specifying abstract classes.
-import numpy as np
-    
-## CLASSES ###################################################################
 
 class Simulatable(object):
-    __metaclass__ = abc.ABCMeta # Needed in any class that has abstract methods.
-    # TODO: docstring!
-    
+    """
+    Base class of all simulatable objects in the Qinfer Library. This is an
+    `abstract class<https://docs.python.org/2/library/abc.html>`_.,
+    which means that this class cannot be directly instantiated. Any class that
+    inherits from this class must have all abstract methods and properties
+    overridden in order to be instantiated.
+    """
+    # Needed in any class that has abstract methods.
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self):
+        """
+        Constructor for :class:`Simulatable`
+        """
         self._sim_count = 0
         
         # Initialize a default scale matrix.
         self._Q = np.ones((self.n_modelparams,))
-        
-    ## ABSTRACT PROPERTIES ##
-    
+
     @abc.abstractproperty
     def n_modelparams(self):
         """
@@ -70,16 +82,14 @@ class Simulatable(object):
     def expparams_dtype(self):
         """
         Returns the dtype of an experiment parameter array. For a
-        model with single-parameter control, this will likely be a scalar dtype,
-        such as ``"float64"``. More generally, this can be an example of a
-        record type, such as ``[('time', 'float64'), ('axis', 'uint8')]``.
+        model with single-parameter control, this will likely be a scalar
+        dtype, such as ``"float64"``. More generally, this can be an example of
+        a record type, such as ``[('time', 'float64'), ('axis', 'uint8')]``.
         
         This property is assumed by inference engines to be constant for
         the lifetime of a Model instance.
         """
         pass
-        
-    ## CONCRETE PROPERTIES ##
     
     @property
     def is_n_outcomes_constant(self):
@@ -106,7 +116,8 @@ class Simulatable(object):
     def base_model(self):
         """
         Returns the most basic model that this model depends on.
-        For standalone models, this property satisfies ``model.base_model is model``.
+        For standalone models, this property satisfies
+        ``model.base_model is model``.
         """
         return self
 
@@ -121,6 +132,11 @@ class Simulatable(object):
     
     @property
     def sim_count(self):
+        """
+        Returns the number of simulations run using this model
+
+        :return:
+        """
         return self._sim_count
         
     @property
@@ -189,12 +205,22 @@ class Simulatable(object):
         Given a shape ``(n_models, n_modelparams)`` array of model parameters,
         returns a boolean array of shape ``(n_models)`` specifying whether
         each set of model parameters represents is valid under this model.
+
+        :param array-like modelparams: An array of tuples of the form
+        ``[(n_models, n_modelparams)]``, to be evaluated in this model, in
+        order to determine if the model parameters are valid for each model
         """
         pass
         
     @abc.abstractmethod
     def simulate_experiment(self, modelparams, expparams, repeat=1):
-        # TODO: document
+        """
+        Simulate the experiment to obtain the posterior distribution of
+        :param modelparams: The model parameters of the simulation
+        :param expparams: The experimental parameters to be simulated
+        :param int repeat: The number of times that the experiment should be
+            repeated and the results averaged. Defaults to 1
+        """
         self._sim_count += modelparams.shape[0] * expparams.shape[0] * repeat
         
     ## CONCRETE METHODS ##
@@ -284,8 +310,8 @@ class Simulatable(object):
         call this method.
         """
         return modelparams
-        
-        
+
+
 class LinearCostModelMixin(Simulatable):
     # FIXME: move this mixin to a new module.
     # TODO: test this mixin.
@@ -299,11 +325,12 @@ class LinearCostModelMixin(Simulatable):
     def experiment_cost(self, expparams):
         return expparams[self._field]
 
+
 class Model(Simulatable):
-    # TODO: now that Model is a subclass of Simulatable, Model may no longer
-    #       be the best name. Maybe rename to SimulatableModel and
-    #       ExplicitModel?
-    
+    """
+    Contains attributes for a Model of a Hamiltonian to be simulated
+    """
+
     ## INITIALIZERS ##
     def __init__(self):
         super(Model, self).__init__()
@@ -313,7 +340,11 @@ class Model(Simulatable):
     
     @property
     def call_count(self):
-        # TODO: document
+        """
+        Returns the number of times that the model was called
+
+        :return:
+        """
         return self._call_count
     
     ## ABSTRACT METHODS ##
@@ -387,6 +418,7 @@ class Model(Simulatable):
             for idx in xrange(outcomes.shape[0])
             ]) 
         
+
 class DifferentiableModel(Model):
     __metaclass__ = abc.ABCMeta # Needed in any class that has abstract methods.
     
