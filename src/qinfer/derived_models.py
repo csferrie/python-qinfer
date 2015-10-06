@@ -163,7 +163,7 @@ class PoisonedModel(DerivedModel):
             epsilon *= self._tol
         # Otherwise, rescale by the estimated error in the binomial estimator.
         elif self._mode == PoisonModes.MLE:
-            epsilon *= binom_est_error(p=L, N=self._n_samples, hedge=self._hedge)
+            epsilon *= binom_est_error(probability_of_success=L, number_of_trials=self._n_samples, hedge=self._hedge)
         
         # Now we truncate and return.
         np.clip(L + epsilon, 0, 1, out=L)
