@@ -194,7 +194,7 @@ if __name__ == "__main__":
         
         for idx_exp in xrange(200):
             if not (idx_exp % 20):
-                print idx_exp
+                print(idx_exp)
             expparams = np.array([(9 / 8) ** idx_exp])
             updater.update(simple_model.simulate_experiment(true, expparams), expparams)
             

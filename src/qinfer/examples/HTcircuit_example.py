@@ -61,7 +61,7 @@ from ..lib import docopt
 try:
     from .. import dialogs
 except ImportError:
-    print "[WARN] Could not import dialogs."
+    print("[WARN] Could not import dialogs.")
     dialogs = None
 
 ## SCRIPT ######################################################################
@@ -243,8 +243,8 @@ if __name__ == "__main__":
         for name, hist in performance_hist.iteritems()
     }
 
-    print "Average time per update for SMC: {}".format(avg_time['SMC'])
-    print "Average time per update for SMCALE: {}".format(avg_time['SMC_ALE'])
+    print("Average time per update for SMC: {}".format(avg_time['SMC']))
+    print("Average time per update for SMCALE: {}".format(avg_time['SMC_ALE']))
 
     
 
