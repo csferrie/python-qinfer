@@ -257,18 +257,30 @@ class TestExperimentCost(TestALEApproximateModel):
         )
 
 
+@mock.patch('qinfer.abstract_model.Model.pr0_to_likelihood_array',
+            return_value=True)
+@mock.patch('qinfer.ale.binom_est_error',
+            return_value=np.array([-np.inf, -np.inf]))
 class TestLikelihood(TestALEApproximateModel):
+
     def setUp(self):
         TestALEApproximateModel.setUp(self)
-
         self.outcomes = np.array([10, 20, 30])
         self.modelparams = np.array([11, 21, 31])
-        self.expparams =  np.array([41, 51, 61])
+        self.expparams = np.array([12, 22, 32])
+        self.ale_model._min_samp = 1
+        self.ale_model._samp_step = 1
 
-        self.number_of_ones = 5
+        self.assertEqual(self.ale_model._min_samp, 1)
+        self.assertEqual(self.ale_model._samp_step, 1)
 
         self.ale_model._simulator.simulate_experiment = mock.MagicMock(
-            return_value=np.ones([1, self.number_of_ones])
+            return_value=np.array([1, 1, 1])
         )
 
-        self.ale_model._error_tol = 0.1
+        self.error_tol = np.inf
+
+    def test_likelihood(self, mock_binom_est, mock_likelihood_array):
+        self.assertTrue(self.ale_model.likelihood(
+            self.outcomes, self.modelparams, self.expparams)
+        )
