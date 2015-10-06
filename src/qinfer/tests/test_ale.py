@@ -3,6 +3,7 @@ Contains unit tests for :mod:`qinfer.ale`
 """
 __author__ = 'Michal Kononenko'
 
+import mock
 import numpy as np
 import qinfer.ale as ale
 from qinfer.tests.base_test import DerandomizedTestCase
@@ -131,10 +132,143 @@ class TestALEApproximateModelConstructor(TestAle):
             )
 
 
-class TestALEApproximateModel(TestALEApproximateModelConstructor):
+class TestALEApproximateModel(TestAle):
     def setUp(self):
-        TestALEApproximateModelConstructor.setUp(self)
+        self.model = SimplePrecessionModel()
+        self.error_tol = 1e-3
+        self.min_samp = 1
+        self.samp_step = 10
+        self.est_hedge = 0.214
+        self.adapt_hedge = 0.215
+
         self.ale_model = ale.ALEApproximateModel(
             self.model, self.error_tol, self.min_samp,
             self.samp_step, self.est_hedge, self.adapt_hedge)
 
+
+class TestALEProperties(TestALEApproximateModel):
+
+    def test_n_model_params(self):
+        self.assertEqual(
+            self.ale_model.n_modelparams,
+            self.ale_model._simulator.n_modelparams
+        )
+
+    def test_expparams_type(self):
+        self.assertEqual(
+            self.ale_model.expparams_dtype,
+            self.ale_model._simulator.expparams_dtype
+        )
+
+    def test_is_n_outcomes_constant(self):
+        self.assertEqual(
+            self.ale_model.is_n_outcomes_constant,
+            self.ale_model._simulator.is_n_outcomes_constant
+        )
+
+    def test_sim_count(self):
+        self.assertEqual(
+            self.ale_model.sim_count,
+            self.ale_model._simulator.sim_count
+        )
+
+    def test_Q(self):
+        self.assertEqual(
+            self.ale_model.Q,
+            self.ale_model._simulator.Q
+        )
+
+
+class TestNParams(TestALEApproximateModel):
+
+    def setUp(self):
+        TestALEApproximateModel.setUp(self)
+        self.n_outcomes = 3
+        self.expparams = [10, 11, 12]
+        self.ale_model._simulator.n_outcomes = mock.MagicMock(
+            return_value=self.n_outcomes)
+
+    def test_n_params(self):
+        self.assertEqual(self.n_outcomes,
+                         self.ale_model.n_outcomes(self.expparams))
+        self.assertEqual(mock.call(self.expparams),
+                         self.ale_model._simulator.n_outcomes.call_args)
+
+
+class TestAreModelsValid(TestALEApproximateModel):
+
+    def setUp(self):
+        TestALEApproximateModel.setUp(self)
+        self.are_models_valid = True
+        self.model_params = [10, 11, 12]
+        self.ale_model._simulator.are_models_valid = mock.MagicMock(
+            return_value=self.are_models_valid
+        )
+
+    def test_are_models_valid(self):
+        self.assertEqual(self.are_models_valid,
+                         self.ale_model.are_models_valid(self.model_params))
+        self.assertEqual(mock.call(self.model_params),
+                         self.ale_model._simulator.are_models_valid.call_args)
+
+
+class TestSimulateExperiment(TestALEApproximateModel):
+    def setUp(self):
+        TestALEApproximateModel.setUp(self)
+        self.modelparams = [10, 11, 12]
+        self.expparams = [20, 21, 22]
+        self.repeat = 10
+
+        self.return_value = 10
+
+        self.ale_model._simulator.simulate_experiment = mock.MagicMock(
+            return_value=self.return_value
+        )
+
+    def test_simulate_experiment(self):
+        self.assertEqual(
+            self.ale_model.simulate_experiment(self.modelparams, self.expparams,
+                                               repeat=self.repeat),
+            self.return_value
+        )
+        self.assertEqual(
+            mock.call(self.modelparams, self.expparams, self.repeat),
+            self.ale_model._simulator.simulate_experiment.call_args
+        )
+
+
+class TestExperimentCost(TestALEApproximateModel):
+    def setUp(self):
+        TestALEApproximateModel.setUp(self)
+        self.expparams = [30, 31, 32]
+
+        self.return_value = [40, 41, 42]
+        self.ale_model._simulator.experiment_cost = mock.MagicMock(
+            return_value=self.return_value)
+
+    def test_experiment_cost(self):
+        self.assertEqual(
+            self.ale_model.experiment_cost(self.expparams), self.return_value
+        )
+
+        self.assertEqual(
+            mock.call(self.expparams),
+            self.ale_model._simulator.experiment_cost.call_args
+        )
+
+
+class TestLikelihood(TestALEApproximateModel):
+    def setUp(self):
+        TestALEApproximateModel.setUp(self)
+
+        self.outcomes = np.array([10, 20, 30])
+        self.modelparams = np.array([11, 21, 31])
+        self.expparams =  np.array([41, 51, 61])
+
+        self.number_of_ones = 5
+
+        self.ale_model._simulator.simulate_experiment = mock.MagicMock(
+            return_value=np.ones([1, self.number_of_ones])
+        )
+
+        self.ale_model._error_tol = 0.1

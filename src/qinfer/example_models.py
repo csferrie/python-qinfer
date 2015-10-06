@@ -41,9 +41,7 @@ __all__ = [
 
 import numpy as np
 
-from utils import binomial_pdf
-
-from abstract_model import Model, DifferentiableModel
+from qinfer.abstract_model import Model, DifferentiableModel
     
 ## CLASSES ###################################################################
 

@@ -198,4 +198,4 @@ if __name__ == "__main__":
             expparams = np.array([(9 / 8) ** idx_exp])
             updater.update(simple_model.simulate_experiment(true, expparams), expparams)
             
-        print model, updater.est_mean(), true, time.time() - tic
+        print(model, updater.est_mean(), true, time.time() - tic)

@@ -163,23 +163,23 @@ class Simulatable(object):
         Returns the names of the various model parameters admitted by this
         model, formatted as LaTeX strings.
         """
-        return map("x_{{{}}}".format, xrange(self.n_modelparams))
+        return map("x_{{{}}}".format, range(self.n_modelparams))
 
     ## CONCRETE METHODS ##
 
     def _repr_html_(self, suppress_base=False):
-        s = ur"""
+        s = r"""
             <strong>{type.__name__}</strong> at 0x{id:0x}: {n_mp} model parameters
         """.format(
             id=id(self), type=type(self),
             n_mp=self.n_modelparams
         )
         if not suppress_base and self.model_chain:
-            s += ur"""<br>
+            s += r"""<br>
             <p>Model chain:</p>
             <ul>{}
             </ul>
-            """.format(ur"\n".join(
+            """.format(r"\n".join(
                 u"<li>{}</li>".format(model._repr_html_(suppress_base=True))
                 for model in self.model_chain
             ))

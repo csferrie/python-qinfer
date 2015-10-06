@@ -233,7 +233,7 @@ if __name__ == "__main__":
     
     # compute mvee
     A, centroid = mvee(points)
-    print A
+    print(A)
     
     # point it and some other stuff
     U, D, V = la.svd(A)    
