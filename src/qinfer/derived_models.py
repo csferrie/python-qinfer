@@ -22,12 +22,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
+"""
+Contains models derived from :mod:`qinfer.abstract_model` that decorate
+and extend other models for simulation
+"""
 
-## FEATURES ###################################################################
+# FEATURES ####################################################################
 
-from __future__ import division # Ensures that a/b is always a float.
+from __future__ import division  # Ensures that a/b is always a float.
 
-## ALL ########################################################################
+# IMPORTS #####################################################################
+
+import numpy as np
+from scipy.stats import binom
+
+from qinfer.utils import binomial_pdf
+from qinfer.abstract_model import Model, DifferentiableModel
+from qinfer.lib import enum  # <- TODO: replace with flufl.enum!
+from qinfer.ale import binom_est_error
+
+# ALL #########################################################################
 
 # We use __all__ to restrict what globals are visible to external modules.
 __all__ = [
@@ -38,17 +52,8 @@ __all__ = [
     'RandomWalkModel'
 ]
 
-## IMPORTS ####################################################################
-
-import numpy as np
-from scipy.stats import binom
-
-from qinfer.utils import binomial_pdf
-from qinfer.abstract_model import Model, DifferentiableModel
-from qinfer.lib import enum # <- TODO: replace with flufl.enum!
-from qinfer.ale import binom_est_error
     
-## CLASSES #####################################################################
+# CLASSES #####################################################################
 
 class DerivedModel(Model):
     """
@@ -60,6 +65,7 @@ class DerivedModel(Model):
     override all of them.
     """
     _underlying_model = None
+
     def __init__(self, underlying_model):
         self._underlying_model = underlying_model
         super(DerivedModel, self).__init__()

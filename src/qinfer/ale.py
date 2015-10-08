@@ -197,4 +197,3 @@ class ALEApproximateModel(Model):
             if np.all(error_est_p1 < self._error_tol): break
             
         return Model.pr0_to_likelihood_array(outcomes, 1 - binom_est_p(n, N, self._est_hedge))
-    
