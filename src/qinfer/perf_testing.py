@@ -217,7 +217,7 @@ def perf_test(
         performance[idx_exp]['loss'] = loss
         performance[idx_exp]['resample_count'] = updater.resample_count
         performance[idx_exp]['outcome'] = datum
-        performance[idx_exp]['est'] = est_mean
+        performance[idx_exp]['est'][:] = est_mean[:]
         if is_scalar_exp:
             performance[idx_exp]['experiment'] = expparams
         else:
