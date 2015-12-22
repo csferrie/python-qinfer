@@ -117,6 +117,30 @@ class SingleSampleMixin(object):
 
 ## CLASSES ###################################################################
 
+class SumDistribution(Distribution):
+    r"""
+    Takes a non-zero number of QInfer distributions :math:`D_k` as input
+    and returns their weighted sum.
+    
+    :param summands: Distributions to be added together.
+    :param weights: The weights for the sum. 
+    """
+    def __init__(self, summands, weights):
+        self._n_rvs = summands[0].n_rvs
+        assert all(s.n_rvs()==self._n_rvs for s in summands), 'Summands are incompatible.'
+        assert len(weights) == len(summands), 'Lengths of inputs do not match.'
+        assert sum(weights) == 1, 'Weights are not normalized.'
+        self._summands = summands
+        self._weights = weights
+    
+    @property
+    def n_rvs(self):
+        return self._n_rvs
+    
+    def sample(self, n=1):
+        indices = np.random.choice(len(self._summands), n, p=self._weights)
+        return np.hstack([self._summands[i].sample() for i in indices])
+
 class ProductDistribution(Distribution):
     r"""
     Takes a non-zero number of QInfer distributions :math:`D_k` as input
