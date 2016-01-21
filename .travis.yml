@@ -24,7 +24,6 @@ install:
   - export PATH=./src/qinfer:$PATH
   - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib nose pip cython
   - pip install -r requirements.txt
-  - python setup.py install
   - cd ./src/qinfer
 
 script:
