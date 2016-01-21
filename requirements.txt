@@ -3,9 +3,5 @@ scipy
 matplotlib
 scikit-learn
 ipython
-
-pytest
-pytest-cov
-pytest-xdist
-
+ipyparallel
 coveralls
