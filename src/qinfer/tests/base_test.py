@@ -25,12 +25,11 @@
 
 ## FEATURES ###################################################################
 
-from __future__ import division # Ensures that a/b is always a float.
+from __future__ import division  # Ensures that a/b is always a float.
 
 ## IMPORTS ####################################################################
 
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
 import unittest
 
 ## CLASSES ####################################################################

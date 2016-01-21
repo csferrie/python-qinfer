@@ -56,7 +56,7 @@ import sys
 from .. import distributions, ale
 from ..smc import SMCUpdater
 from ..tomography import HTCircuitModel
-from .._lib import docopt
+from ..lib import docopt
 
 try:
     from .. import dialogs

@@ -70,7 +70,7 @@ from ..resamplers import LiuWestResampler, ClusteringResampler
 from ..distributions import HilbertSchmidtUniform
 
 ## External libraries bundled with QInfer. ##
-from .._lib import docopt
+from ..lib import docopt
 
 ## SCRIPT ######################################################################
 
