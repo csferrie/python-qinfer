@@ -11,7 +11,6 @@ before_install:
   - chmod +x miniconda.sh
   - ./miniconda.sh -b
   - export PATH=/home/travis/miniconda/bin:$PATH
-  - conda update --yes conda
 
 install:
   - export PATH=./src/qinfer:$PATH
