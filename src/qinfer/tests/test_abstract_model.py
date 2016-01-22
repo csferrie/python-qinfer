@@ -30,14 +30,17 @@ from __future__ import division # Ensures that a/b is always a float.
 ## IMPORTS ####################################################################
 
 import numpy as np
+import mock
 from numpy.testing import assert_equal, assert_almost_equal
 
 from qinfer.tests.base_test import DerandomizedTestCase
 from qinfer.abstract_model import (
     Model
 )
-    
+
+
 ## CLASSES ####################################################################
+
 
 class MockModel(Model):
     """
@@ -47,10 +50,19 @@ class MockModel(Model):
     
     @property
     def n_modelparams(self):
+        """
+        Returns the number of model parameters in class:`MockModel`
+        """
         return 2
-        
-    @staticmethod
-    def are_models_valid(modelparams):
+
+    def are_models_valid(self, modelparams):
+        """
+        Overrides the abstract method :meth:`Simulatable.are_models_valid`
+        in order to enable testing
+
+        :param modelparams:
+        :return:
+        """
         return np.ones((modelparams.shape[0], ), dtype=bool)
         
     @property
@@ -63,8 +75,7 @@ class MockModel(Model):
     @property
     def expparams_dtype(self):
         return [('a', float), ('b', int)]
-        
-    
+
     def likelihood(self, outcomes, modelparams, expparams):
         super(MockModel, self).likelihood(outcomes, modelparams, expparams)
         pr0 = np.ones((modelparams.shape[0], expparams.shape[0])) / 2
@@ -76,6 +87,16 @@ class TestModel(DerandomizedTestCase):
     def setUp(self):
         super(TestModel, self).setUp()
         self.mock_model = MockModel()
+
+    def test_call_count(self):
+        self.assertEqual(self.mock_model.call_count,
+                         self.mock_model._call_count)
+
+    def test_is_model_valid(self):
+        modelparams = np.linspace(1, 2, 100)
+        with mock.patch('qinfer.abstract_model.Model.are_models_valid',
+                        return_value=[True]):
+            self.assertTrue(self.mock_model.is_model_valid(modelparams))
 
     def test_pr0_shape(self):
         """

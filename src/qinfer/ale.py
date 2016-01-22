@@ -23,11 +23,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-## FEATURES ###################################################################
+# FEATURES ####################################################################
 
 from __future__ import division
 
-## ALL ########################################################################
+# ALL #########################################################################
 
 # We use __all__ to restrict what globals are visible to external modules.
 __all__ = [
@@ -35,7 +35,7 @@ __all__ = [
     'ALEApproximateModel'
 ]
 
-## IMPORTS ####################################################################
+# IMPORTS #####################################################################
 
 from itertools import count
 import warnings
@@ -49,30 +49,44 @@ from qinfer._exceptions import ApproximationWarning
 
 ## FUNCTIONS ##################################################################
 
-def binom_est_p(n, N, hedge=float(0)):
+
+def binom_est_p(number_of_successes, number_of_trials, hedge=float(0)):
     r"""
     Given a number of successes :math:`n` and a number of trials :math:`N`,
     estimates the binomial distribution parameter :math:`p` using the
     hedged maximum likelihood estimator of [FB12]_.
     
-    :param n: Number of successes.
-    :type n: `numpy.ndarray` or `int`
-    :param int N: Number of trials.
+    :param number_of_successes: Number of successes.
+    :type number_of_successes: `numpy.ndarray` or `int`
+    :param int number_of_trials: Number of trials.
     :param float hedge: Hedging parameter :math:`\beta`.
     :rtype: `float` or `numpy.ndarray`.
     :return: The estimated binomial distribution parameter :math:`p` for each
         value of :math:`n`.
     """
-    return (n + hedge) / (N + 2 * hedge)
-    
-def binom_est_error(p, N, hedge = float(0)):
+    return (number_of_successes + hedge) / (number_of_trials + 2 * hedge)
+
+
+def binom_est_error(probability_of_success, number_of_trials, hedge=float(0)):
     r"""
+    Given a probability of success :math:`p` and a number of trials :math:`N`,
+    estimates the error in estimation of :math:`p` using a hedged estimator
+
+    :param float probability_of_success: Probability of success
+    :param int number_of_trials: The number of trials
+    :param float hedge: Hedging parameter :math:`\beta`
+    :rtype: float or `numpy.ndarray`
+    :return: The estimated error in the parameter :math:`p` for each value of
+        :math:`p`
     """
-    
     # asymptotic np.sqrt(p * (1 - p) / N)
-    return np.sqrt(p*(1-p)/(N+2*hedge+1))
+    return np.sqrt(
+        probability_of_success * (1 - probability_of_success) /
+        (number_of_trials + 2 * hedge + 1)
+    )
 
 ## CLASSES ####################################################################
+
 
 class ALEApproximateModel(Model):
     r"""
@@ -136,19 +150,26 @@ class ALEApproximateModel(Model):
     
     @property
     def n_modelparams(self): return self._simulator.n_modelparams
+
     @property
     def expparams_dtype(self): return self._simulator.expparams_dtype
+
     @property
     def is_n_outcomes_constant(self): return self._simulator.is_n_outcomes_constant
+
     @property
     def sim_count(self): return self._simulator.sim_count
+
     @property
     def Q(self): return self._simulator.Q
     
     def n_outcomes(self, expparams): return self._simulator.n_outcomes(expparams)
+
     def are_models_valid(self, modelparams): return self._simulator.are_models_valid(modelparams)
+
     def simulate_experiment(self, modelparams, expparams, repeat=1):
         return self._simulator.simulate_experiment(modelparams, expparams, repeat)
+
     def experiment_cost(self, expparams): return self._simulator.experiment_cost(expparams)
     
     ## IMPLEMENTATIONS OF MODEL METHODS ##
@@ -170,8 +191,9 @@ class ALEApproximateModel(Model):
             )
             n += np.sum(sim_data, axis=0) # Sum over the outcomes axis to find the
                                           # number of 1s.
-            error_est_p1 = binom_est_error(binom_est_p(n, N, self._adapt_hedge), N, self._adapt_hedge)
+            error_est_p1 = binom_est_error(
+                binom_est_p(n, N, self._adapt_hedge), N, self._adapt_hedge
+            )
             if np.all(error_est_p1 < self._error_tol): break
             
         return Model.pr0_to_likelihood_array(outcomes, 1 - binom_est_p(n, N, self._est_hedge))
-    

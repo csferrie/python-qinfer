@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ##
-# test_models.py: Simple models for testing inference engines.
+# example_models.py: Simple models for testing inference engines.
 ##
 # © 2012 Chris Ferrie (csferrie@gmail.com) and
 #        Christopher E. Granade (cgranade@gmail.com)
@@ -22,7 +22,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
-
+"""
+Contains test models for the quantum Hamiltonian used in ``examples``
+"""
 ## FEATURES ##################################################################
 
 from __future__ import division # Ensures that a/b is always a float.
@@ -39,9 +41,7 @@ __all__ = [
 
 import numpy as np
 
-from utils import binomial_pdf
-
-from abstract_model import Model, DifferentiableModel
+from qinfer.abstract_model import Model, DifferentiableModel
     
 ## CLASSES ###################################################################
 
@@ -56,15 +56,10 @@ class SimplePrecessionModel(DifferentiableModel):
         degenerate models; there is no "good" reason to ever set this other
         than zero, other than to test with an explicitly broken model.
     """
-    
-    ## INITIALIZER ##
-
     def __init__(self, min_freq=0):
         super(SimplePrecessionModel, self).__init__()
         self._min_freq = min_freq
 
-    ## PROPERTIES ##
-    
     @property
     def n_modelparams(self):
         return 1
@@ -220,9 +215,9 @@ class NDieModel(Model):
         return True
     
     ## METHODS ##
-    def __init__(self, n = 6):
-	    self.n = n
-	    Model.__init__(self)
+    def __init__(self, n=6):
+        self.n = n
+        Model.__init__(self)
 	
     @staticmethod
     def are_models_valid(modelparams):

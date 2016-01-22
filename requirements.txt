@@ -1,5 +1,12 @@
 numpy
 scipy
+matplotlib
 scikit-learn
 ipython
 
+mock
+pytest
+pytest-cov
+pytest-xdist
+
+coveralls

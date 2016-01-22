@@ -52,7 +52,13 @@ import socket
 import warnings
 from itertools import count
 
-from qinfer._lib import enum # <- TODO: replace with flufl.enum
+from qinfer.lib import enum # <- TODO: replace with flufl.enum
+
+
+# EXCEPTIONS ##################################################################
+class UnableToGetConnError(Exception):
+    pass
+
 
 ## FUNCTIONS ##################################################################
 
@@ -69,7 +75,10 @@ def pretty_time(secs, force_h=False, force_m=False):
         return "{s} seconds".format(s=int(secs))
 
 def _get_conn():
-    for port in count(10000):
+    min_port_number = 10000
+    max_port_number = 65535
+
+    for port in range(min_port_number, max_port_number + 1):
         try:
             listener = multiprocessing.connection.Listener(
                 ('localhost', int(port)),
@@ -79,7 +88,10 @@ def _get_conn():
         except socket.error as ex:
             if ex.errno != 98: # Err 98 is port not available.
                 raise ex
-    
+    raise UnableToGetConnError(
+        'Iteration from port %s to port %s yielded no available connection',
+        min_port_number, max_port_number
+    )
    
 ## ENUMS ######################################################################
 

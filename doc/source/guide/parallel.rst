@@ -35,6 +35,38 @@ or more engines, typically obtained with an expression similar to
 across the engines accessible from the `DirectView`.
 
 >>> from IPython.parallel import Client # doctest: +SKIP
+>>> from qinfer.example_models import SimplePrecessionModel # doctest: +SKIP
+>>> from qinfer.parallel import DirectViewParallelizedModel # doctest: +SKIP
+>>> c = Client() # doctest: +SKIP
+>>> serial_model = SimplePrecessionModel() # doctest: +SKIP
+>>> parallel_model = DirectViewParallelizedModel(serial_model, c[:]) # doctest: +SKIP
+
+The newly decorated model will now distribute likelihood calls, such that each
+engine computes the likelihood for an equal number of particles. As a
+consequence, information shared per-experiment or per-outcome is local to each
+engine, and is not distributed. Therefore, this approach works best at quickly
+parallelizing where the per-model cost is significantly larger than the
+per-experiment or per-outcome cost.
+
+
+
+>>> from IPython.parallel import Client # doctest: +SKIP
+>>> from qinfer.example_models import SimplePrecessionModel # doctest: +SKIP
+>>> from qinfer.parallel import DirectViewParallelizedModel # doctest: +SKIP
+>>> c = Client() # doctest: +SKIP
+>>> serial_model = SimplePrecessionModel() # doctest: +SKIP
+>>> parallel_model = DirectViewParallelizedModel(serial_model, c[:]) # doctest: +SKIP
+
+The newly decorated model will now distribute likelihood calls, such that each
+engine computes the likelihood for an equal number of particles. As a
+consequence, information shared per-experiment or per-outcome is local to each
+engine, and is not distributed. Therefore, this approach works best at quickly
+parallelizing where the per-model cost is significantly larger than the
+per-experiment or per-outcome cost.
+
+
+
+>>> from IPython.parallel import Client # doctest: +SKIP
 >>> from qinfer.test_models import SimplePrecessionModel # doctest: +SKIP
 >>> from qinfer.parallel import DirectViewParallelizedModel # doctest: +SKIP
 >>> c = Client() # doctest: +SKIP

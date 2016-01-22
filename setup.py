@@ -21,7 +21,7 @@ setup(
     package_dir={'': 'src'},
     packages=[
         'qinfer',
-        'qinfer._lib',
+        'qinfer.lib',
         'qinfer.examples',
         'qinfer.ui',
         'qinfer.experimental',

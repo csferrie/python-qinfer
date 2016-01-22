@@ -58,6 +58,42 @@ In order to use this likelihood function, we must instantiate the model that
 implements the likelihood. Since :class:`~test_models.SimplePrecessionModel` is
 provided with QInfer, we can simply import it and make an instance.
 
+>>> from qinfer.example_models import SimplePrecessionModel
+>>> m = SimplePrecessionModel()
+
+Once a model or simulator has been created, you can query how many model
+parameters it admits and how many outcomes a given experiment can have.
+
+>>> print m.n_modelparams
+1
+>>> print m.modelparam_names
+['\\omega']
+>>> print m.is_n_outcomes_constant
+True
+>>> print m.n_outcomes(expparams=0)
+2
+
+
+provided with QInfer, we can simply import it and make an instance.
+
+>>> from qinfer.example_models import SimplePrecessionModel
+>>> m = SimplePrecessionModel()
+
+Once a model or simulator has been created, you can query how many model
+parameters it admits and how many outcomes a given experiment can have.
+
+>>> print m.n_modelparams
+1
+>>> print m.modelparam_names
+['\\omega']
+>>> print m.is_n_outcomes_constant
+True
+>>> print m.n_outcomes(expparams=0)
+2
+
+
+provided with QInfer, we can simply import it and make an instance.
+
 >>> from qinfer.test_models import SimplePrecessionModel
 >>> m = SimplePrecessionModel()
 
@@ -288,6 +324,20 @@ experimental concerns make switching experiments costly, such that repeated
 measurements make sense.
 
 To use :class:`BinomialModel`, simply provide an instance of another model
+class:
+
+>>> from qinfer.example_models import SimplePrecessionModel
+>>> from qinfer.derived_models import BinomialModel
+>>> bin_model = BinomialModel(SimplePrecessionModel())
+
+Experiments for
+class:
+
+>>> from qinfer.example_models import SimplePrecessionModel
+>>> from qinfer.derived_models import BinomialModel
+>>> bin_model = BinomialModel(SimplePrecessionModel())
+
+Experiments for
 class:
 
 >>> from qinfer.test_models import SimplePrecessionModel

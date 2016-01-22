@@ -57,8 +57,8 @@ import sys
 ## Imports from within QInfer. ##
 from .. import distributions, ale
 from ..smc import SMCUpdater
-from ..test_models import NoisyCoinModel
-from .._lib import docopt
+from ..example_models import NoisyCoinModel
+from ..lib import docopt
 
 try:
     from .. import dialogs

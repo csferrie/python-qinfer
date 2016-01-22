@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 ##
-# perf_testing.py: Tests the performance of SMC estimation and likelihood
+# perf_evaluation.py: Tests the performance of SMC estimation and likelihood
 #     calls.
 ##
 # © 2014 Chris Ferrie (csferrie@gmail.com) and
@@ -30,7 +30,7 @@ from __future__ import division
 ## EXPORTS ###################################################################
 
 __all__ = [
-    'timing', 'perf_test', 'perf_test_multiple'
+    'timing', 'perf_trial', 'perf_eval_multiple'
 ]
 
 ## IMPORTS ###################################################################
@@ -103,7 +103,7 @@ def timing():
 
     >>> with timing() as t:
     ...     time.sleep(1)
-    >>> print t.delta_t # Should return approximately 1.
+    >>> print(t.delta_t) # Should return approximately 1.
     """
     t = Timer()
     yield t
@@ -146,7 +146,7 @@ def actual_dtype(model):
     else:
         return PERFORMANCE_DTYPE + model_dtype + model.expparams_dtype, False
 
-def perf_test(
+def perf_trial(
         model, n_particles, prior, n_exp, heuristic_class,
         true_model=None, true_prior=None, true_mps=None,
         extra_updater_args=None
@@ -246,7 +246,7 @@ class apply_serial(object):
 
         return self._value
 
-def perf_test_multiple(
+def perf_eval_multiple(
         n_trials,
         model, n_particles, prior,
         n_exp, heuristic_class,
@@ -259,7 +259,7 @@ def perf_test_multiple(
     ):
     # TODO: write full docstring, but this repeats many times.
 
-    trial_fn = partial(perf_test,
+    trial_fn = partial(perf_trial,
         model, n_particles, prior,
         n_exp, heuristic_class, true_model, true_prior,
         extra_updater_args=extra_updater_args
@@ -288,7 +288,7 @@ def perf_test_multiple(
             thread.start()
 
         except Exception as ex:
-            print "Failed to start tskmon task: ", ex
+            print("Failed to start tskmon task: ", ex)
 
     try:
         if progressbar is not None:
@@ -330,9 +330,9 @@ def perf_test_multiple(
                 # raise and move on.
                 thread.join(1)
                 if thread.is_alive():
-                    print "Thread didn't die. This is a bug."
+                    print("Thread didn't die. This is a bug.")
             except Exception as ex:
-                print "Exception cleaning up tskmon task.", ex
+                print("Exception cleaning up tskmon task.", ex)
 
         prog.finished()
 
