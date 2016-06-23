@@ -2,8 +2,16 @@
 Welcome to QInfer
 =================
 
-.. image:: https://zenodo.org/badge/19664/QInfer/python-qinfer.svg
-   :target: https://zenodo.org/badge/latestdoi/19664/QInfer/python-qinfer
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.51273.svg
+   :target: http://dx.doi.org/10.5281/zenodo.51273
+
+.. image:: https://img.shields.io/badge/launch-binder-E66581.svg
+    :target: http://mybinder.org/repo/qinfer/qinfer-examples
+    :alt: Launch Binder
+    
+.. image:: https://img.shields.io/pypi/v/QInfer.svg?maxAge=2592000
+    :target: https://pypi.python.org/pypi/QInfer
+    
 
 .. image:: https://travis-ci.org/QInfer/python-qinfer.svg?branch=master
     :target: https://travis-ci.org/QInfer/python-qinfer
@@ -16,61 +24,61 @@ Welcome to QInfer
    :alt: Code Climate
 
 **QInfer** is a library using Bayesian sequential Monte Carlo for quantum
-parameter estimation.
-
-
-Obtaining QInfer
-================
-
-A stable version of **QInfer** has not yet been released. Until then,
-the latest version may always be obtained by cloning into the GitHub
-repository::
-
-    $ git clone git@github.com:csferrie/python-qinfer.git
-    
-Once obtained in this way, **QInfer** may be updated by pulling from GitHub::
-
-    $ git pull
+parameter estimation. Works with Python 2.7, 3.3, 3.4 and 3.5.
 
 Installing QInfer
 =================
 
-**QInfer** provides a setup script, ``setup.py``, for installing from source.
-On Unix-like systems, **QInfer** can be made available globally by running::
+We recommend using **QInfer** with the
+`Anaconda distribution`_. Download and install
+Anaconda for your platform, either Python 2.7 or 3.5. We
+suggest using Python 3.5, but **QInfer**
+works with either.
 
-    $ cd /path/to/qinfer/
-    $ sudo python setup.py install
+If using Anaconda, you should go ahead now and install from their repository
+all the dependencies that we can. If you are using "regular"-Python then you can
+ignore this step. Replace ``python=3.5`` with your version (typically
+either 2.7 or 3.5).
 
-On Windows, run ``cmd.exe``, then run the setup script::
+.. code-block:: console
 
-    C:\> cd C:\path\to\qinfer\
-    C:\path\to\qinfer\> python setup.py install
-    
-Note that you may be prompted for permission by User Access Control.
+    $ conda install python=3.5 numpy scipy matplotlib scikit-learn
 
-Dependencies
-============
+If you are **not** using Anaconda, but are instead using "regular"-Python,
+and you are on Linux, you will need the Python development package:
 
-**QInfer** depends on only a very few packages:
+.. code-block:: console
 
-- Python 2.7 (may work with earlier, but not tested).
-- NumPy and SciPy.
-- [Optional] `SciKit-Learn`_ required for some advanced features.
-- [Optional] `Sphinx`_ required to rebuild documentation.
+    $ sudo apt-get install python-dev
 
-On Windows, these packages can be provided by `Python(x,y)`_. Linux users may
-obtain the needed dependencies. Under Ubuntu::
+Where ``python-dev`` might be ``python3.5-dev`` depending on your package
+manager and which version of Python you are using.
 
-    $ sudo apt-get install python2.7 python-numpy python-scipy python-scikits-learn python-sphinx
-    
-On Fedora::
+The latest release of **QInfer** can now be installed from
+``PyPI`` with ``pip``:
 
-    $ sudo yum install python numpy scipy python-sphinx
-    $ sudo easy_install -U scikit-learn
+.. code-block:: console
 
-Alternatively,
-`Enthought Python Distribution`_ has been tested with **QInfer**, and may be
-used on Windows, Mac OS X or Linux.
+    $ pip install qinfer
+
+Alternatively, **QInfer** can be installed using ``pip`` and Git. Ensure that
+you have Git installed. On Windows, we suggest the
+`official Git downloads <https://git-scm.com/downloads>`__.
+Once Anaconda and Git are installed, simply run ``pip`` to install **QInfer**:
+
+.. code-block:: console
+
+    $ pip install git+https://github.com/QInfer/python-qinfer.git
+
+Lastely, **QInfer** can be installed manually by downloading from GitHub,
+then running the provided installer:
+
+.. code-block:: console
+
+    $ git clone git@github.com:QInfer/python-qinfer.git
+    $ cd python-qinfer
+    $ pip install -r requirements.txt
+    $ python setup.py install
 
 More Information
 ================
@@ -91,7 +99,5 @@ On Windows::
 The generated documentation can be viewed by opening
 ``doc/_build/html/index.html``.
 
-.. _Enthought Python Distribution: http://www.enthought.com/products/epd.php
-.. _Python(x,y): http://code.google.com/p/pythonxy/
-.. _SciKit-Learn: http://scikit-learn.org/stable/
+.. _Anaconda distribution: https://www.continuum.io/downloads
 .. _Sphinx: http://sphinx-doc.org/

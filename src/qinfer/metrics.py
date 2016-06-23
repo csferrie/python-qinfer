@@ -25,6 +25,7 @@
 
 ## FEATURES ###################################################################
 
+from __future__ import absolute_import
 from __future__ import division
 
 ## ALL ########################################################################
@@ -47,7 +48,13 @@ try:
     import sklearn.metrics
     import sklearn.metrics.pairwise
 except ImportError:
-    warnings.warn("Could not import scikit-learn. Some features may not work.")
+    try:
+        import logging
+        logging.getLogger(__name__)
+        logger.addHandler(logging.NullHandler())
+        logger.info("Could not import scikit-learn. Clustering metrics are disabled.")
+    except:
+        pass
     sklearn = None
 
 ## FUNCTIONS ##################################################################

@@ -2,9 +2,13 @@ sudo: false
 language: python
 python:
   - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
 
-virtualenv:
-  system_site_packages: true
+env:
+  global:
+    - secure: 
 
 notifications:
   email: false
@@ -18,11 +22,29 @@ before_install:
   - conda update --yes conda
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION atlas numpy scipy matplotlib nose dateutil pandas statsmodels scikit-learn
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib scikit-learn sphinx
   - pip install -r requirements.txt
-  - cd ./src/qinfer
+  - python setup.py install
+  - cd src/
+
 script:
-  - py.test --cov=.
+  - py.test --cov-config .coveragerc --cov=qinfer
+  - pylint --py3k qinfer/
+  - cd $TRAVIS_BUILD_DIR/doc
+  - make doctest
 
 after_success:
   - coveralls
+
+before_deploy:
+  # For why this is needed, see:
+  # http://stackoverflow.com/questions/36635650/travisci-deploy-cannot-find-setup-py
+  - cd $TRAVIS_BUILD_DIR
+
+deploy:
+  provider: pypi
+  user: ${PYPI_USERNAME}
+  password: ${PYPI_PASSWORD}
+  distributions: "sdist bdist_wheel"
+  on:
+    tags: true

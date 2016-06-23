@@ -5,16 +5,16 @@
     letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View,
     California, 94041, USA.
     
-.. _apiref:
-
-API Reference
-=============
-
-
-.. toctree::
-    :maxdepth: 2
-    :glob:
+.. _parallel:
     
-    *
+.. currentmodule:: qinfer
 
+Parallelized Models
+===================
+
+:class:`~qinfer.DirectViewParallelizedModel`
+--------------------------------------------
+
+.. autoclass:: DirectViewParallelizedModel
+    :members:
 

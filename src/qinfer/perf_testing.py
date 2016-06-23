@@ -25,6 +25,8 @@
 
 ## FEATURES ##################################################################
 
+from __future__ import absolute_import
+from __future__ import print_function
 from __future__ import division
 
 ## EXPORTS ###################################################################
@@ -35,15 +37,17 @@ __all__ = [
 
 ## IMPORTS ###################################################################
 
+from builtins import range
+
 from contextlib import contextmanager
 from functools import partial
-import threading
 import time
 
 import numpy as np
 import numpy.ma as ma
 
 from qinfer.smc import SMCUpdater
+from qinfer.utils import pretty_time
 
 ## CLASSES ###################################################################
 
@@ -62,6 +66,16 @@ class Timer(object):
     def stop(self):
         self._toc = time.time()
 
+    def __repr__(self):
+        return "<qinfer.Timer at 0x{0:x}, {1} elapsed>".format(
+            id(self), pretty_time(self.delta_t)
+        )
+
+    def __str__(self):
+        return "{0} elapsed".format(
+            pretty_time(self.delta_t)
+        )
+
     @property
     def delta_t(self):
         """
@@ -69,29 +83,6 @@ class Timer(object):
         """
         return (self._toc if self._toc is not None else time.time()) - self._tic
 
-
-class WebProgressThread(threading.Thread):
-    done = False
-    dirty = False
-    progress = 0
-
-    def __init__(self, task, wake_event):
-        super(WebProgressThread, self).__init__()
-        self._task = task
-        self._wake_event = wake_event
-
-    def run(self):
-        while True:
-            if self.done:
-                return
-            if self.dirty:
-                try:
-                    self._task.update(progress=self.progress)
-                    self.dirty = False
-                    self._wake_event.clear()
-                except Exception as ex:
-                    print(ex)
-            self._wake_event.wait()
 
 ## CONTEXT MANAGERS ##########################################################
 
@@ -108,6 +99,7 @@ def timing():
     t = Timer()
     yield t
     t.stop()
+
 
 @contextmanager
 def numpy_err_policy(**kwargs):
@@ -145,6 +137,7 @@ def actual_dtype(model):
         return PERFORMANCE_DTYPE + model_dtype + [('experiment', model.expparams_dtype)], True
     else:
         return PERFORMANCE_DTYPE + model_dtype + model.expparams_dtype, False
+
 
 def perf_test(
         model, n_particles, prior, n_exp, heuristic_class,
@@ -202,7 +195,7 @@ def perf_test(
 
     performance['true'] = true_mps
 
-    for idx_exp in xrange(n_exp):
+    for idx_exp in range(n_exp):
         expparams = heuristic()
         datum = true_model.simulate_experiment(true_mps, expparams)
 
@@ -225,6 +218,7 @@ def perf_test(
                 performance[idx_exp][param_name] = expparams[param_name]
 
     return performance
+
 
 class apply_serial(object):
     """
@@ -252,7 +246,6 @@ def perf_test_multiple(
         n_exp, heuristic_class,
         true_model=None, true_prior=None,
         apply=apply_serial,
-        tskmon_client=None,
         allow_failures=False,
         extra_updater_args=None,
         progressbar=None
@@ -268,72 +261,49 @@ def perf_test_multiple(
     dtype, is_scalar_exp = actual_dtype(model)
     performance = (np.zeros if not allow_failures else ma.zeros)((n_trials, n_exp), dtype=dtype)
 
-    task = None
-    thread = None
-    wake_event = None
+    prog = None
 
-    if tskmon_client is not None:
-        try:
-            name = getattr(type(model), '__name__', 'unknown model')
-            task = tskmon_client.new_task(
-                description="QInfer Performance Testing",
-                status="Testing {}...".format(name),
-                max_progress=n_trials
-            )
-            wake_event = threading.Event()
-            thread = WebProgressThread(task, wake_event)
-            # We shouldn't need this, as it's a bug if it doesn't join, but
-            # we do it to mitigate worst cases.
-            thread.daemon = True
-            thread.start()
-
-        except Exception as ex:
-            print "Failed to start tskmon task: ", ex
+    try:
+        name = getattr(type(model), '__name__', 'unknown model')
+    except:
+        name = 'unknown model'
 
     try:
         if progressbar is not None:
             prog = progressbar()
             prog.start(n_trials)
+            if hasattr(prog, 'description'):
+                prog.description = 'Performance testing {} (0 / {})...'.format(
+                    name, n_trials
+                )
 
         # Make sure that everything we do catches NaNs as exceptions,
         # such that we can correctly record them as failures.
         with numpy_err_policy(divide='raise'):
             # Loop through once to dispatch tasks.
             # We'll loop through again to collect results.
-            results = [apply(trial_fn) for idx in xrange(n_trials)]
+            results = [apply(trial_fn) for idx in range(n_trials)]
 
             for idx, result in enumerate(results):
                 # FIXME: This is bad practice, but I don't feel like rewriting to
                 #        avoid right now.
                 try:
                     performance[idx, :] = result.get()
-                    prog.update(idx)
+                    if prog is not None:
+                        prog.update(idx)
+                        if hasattr(prog, 'description'):
+                            prog.description = 'Performance testing {} ({} / {})...'.format(
+                                name, idx, n_trials
+                            )
+
                 except:
                     if allow_failures:
                         performance.mask[idx, :] = True
                     else:
                         raise
 
-                if thread is not None:
-                    thread.progress = idx + 1
-                    thread.dirty = True
-                    wake_event.set()
-
     finally:
-        # Make *sure* we've killed the thread.
-        if task is not None:
-            try:
-                thread.done = True
-                wake_event.set()
-                task.delete()
-                # Try and join for 1s. If nothing happens, we
-                # raise and move on.
-                thread.join(1)
-                if thread.is_alive():
-                    print "Thread didn't die. This is a bug."
-            except Exception as ex:
-                print "Exception cleaning up tskmon task.", ex
-
-        prog.finished()
+        if prog is not None:
+            prog.finished()
 
     return performance

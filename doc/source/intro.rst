@@ -6,7 +6,8 @@
     California, 94041, USA.
     
 .. _intro:
-    
+
+============
 Introduction
 ============
 
@@ -19,121 +20,92 @@ Additionally, **QInfer** is designed for use with cutting-edge tools, such as
 Python and IPython, making it easier to integrate with the rich community of
 Python-based scientific software libraries.
 
-Obtaining QInfer
-----------------
 
-A fully-stable version of **QInfer** has not yet been released. Until then,
-the latest version may always be obtained by cloning into the GitHub
-repository::
+Installing QInfer
+=================
 
-    $ git clone git@github.com:csferrie/python-qinfer.git
-    
-Once obtained in this way, **QInfer** may be updated by pulling from GitHub::
+We recommend using **QInfer** with the
+`Anaconda distribution`_. Download and install
+Anaconda for your platform, either Python 2.7 or 3.5. We
+suggest using Python 3.5, but **QInfer**
+works with either.
+Once Anaconda is installed, simply run ``pip`` to install **QInfer**::
 
-    $ git pull
+    $ pip install qinfer
 
-Installation
-------------
+Alternatively, **QInfer** can be installed manually by downloading from GitHub,
+then running the provided installer::
 
-**QInfer** provides a setup script, ``setup.py``, for installing from source.
-On Unix-like systems, **QInfer** can be made available globally by running::
-
-    $ cd /path/to/qinfer/
-    $ sudo python setup.py install
-
-On Windows, run ``cmd.exe``, then run the setup script::
-
-    C:\> cd C:\path\to\qinfer\
-    C:\path\to\qinfer\> python setup.py install
-    
-Note that you may be prompted for permission by User Access Control.
-
-Dependencies
-------------
-
-**QInfer** depends on only a very few packages:
-
-- Python 2.7 (may work with earlier, but not tested).
-- NumPy and SciPy.
-
-Some features of **QInfer** require additional packages, but the core of
-**QInfer** will work without them:
-
-- `SciKit-Learn`_ required for some advanced features, such as clustering.
-- `Sphinx`_ required to rebuild documentation.
-- `matplotlib`_ required for plotting functionality.
-- `IPython Notebook`_ (version 1.1) is used to provide examples.
-
-On Windows, these packages can be provided by `Python(x,y)`_. Linux users may
-obtain the needed dependencies using package managers. Under Ubuntu::
-
-    $ sudo apt-get install python2.7 python-numpy python-scipy python-scikits-learn python-matplotlib python-sphinx ipython-notebook
-    
-On Fedora::
-
-    $ sudo yum install python numpy scipy python-sphinx python-matplotlib python-ipython-notebook
-    $ sudo easy_install -U scikit-learn
-
-Alternatively,
-`Enthought Canopy`_ has been tested with **QInfer**, and may be
-used on Windows, Mac OS X or Linux.
+    $ git clone git@github.com:QInfer/python-qinfer.git
+    $ cd python-qinfer
+    $ pip install -r requirements.txt
+    $ python setup.py install
 
 Citing QInfer
--------------
+=============
 
 If you use **QInfer** in your publication or presentation, we would appreciate it
 if you cited our work. We recommend citing **QInfer** by using the BibTeX
 entry::
 
-    @Misc{,
-      author = {Christopher Ferrie and Christopher Granade and others},
-      title =  {{QInfer}: Library for Statistical Inference in Quantum Information},
-      year =   {2012--},
-      url =    "https://github.com/csferrie/python-qinfer"
+    @misc{qinfer-1_0b4,
+      author       = {Christopher Granade and
+                      Christopher Ferrie and
+                      Steven Casagrande and
+                      Ian Hincks and
+                      Michal Kononenko and
+                      Thomas Alexander and
+                      Yuval Sanders},
+      title        = {{QInfer}: Library for Statistical Inference in Quantum Information},
+      month        = may,
+      year         = 2016,
+      doi          = {10.5281/zenodo.51273},
+      url          = {http://dx.doi.org/10.5281/zenodo.51273}
     }
 
-To indicate which version of **QInfer** you used in your work, it may be helpful
+If you wish to cite **QInfer** functionality that has not yet appeared in a
+released version, it may be helpful
 to cite a given SHA hash as listed on
-`GitHub <https://github.com/csferrie/python-qinfer/commits/master>`_ (the
+`GitHub <https://github.com/QInfer/python-qinfer/commits/master>`_ (the
 hashes of each commit are listed on the right hand side of the page).
-A recommended BibTeX entry for citing a particular version is::
+A recommended BibTeX entry for citing a particular commit is::
 
-    @Misc{,
-      author = {Christopher Ferrie and Christopher Granade and others},
-      title =  {{QInfer}: Library for Statistical Inference in Quantum Information},
-      year =   {2013},
-      month =  {2},
-      day =    {18},
-      url =    "https://github.com/csferrie/python-qinfer/commit/d04bc1d53933f13065917c15ccb0e2f127de3b8a",
-      note =   {Version \texttt{d04bc1d53933f13065917c15ccb0e2f127de3b8a}.}
+    @misc{qinfer-1_0b4,
+      author       = {Christopher Granade and
+                      Christopher Ferrie and
+                      Steven Casagrande and
+                      Ian Hincks and
+                      Michal Kononenko and
+                      Thomas Alexander and
+                      Yuval Sanders},
+      title        = {{QInfer}: Library for Statistical Inference in Quantum Information},
+      month        = may,
+      year         = 2016,
+      url =    "https://github.com/QInfer/python-qinfer/commit/bc3736c",
+      note =   {Version \texttt{bc3736c}.}
     }
+
     
-In this example, ``d04bc1d53933f13065917c15ccb0e2f127de3b8a`` should be replaced by the
-particular version being cited.
+In this example, ``bc3736c`` should be replaced by the
+particular commit being cited, and the date should be replaced by the date
+of that commit.
 
 Getting Started
----------------
+===============
 
 To get started using **QInfer**, it may be helpful to give a look through the
 :ref:`guide`. Alternatively, you may want to dive right into looking at
-the `examples`_ using `IPython Notebook`_. To do so, from your system command
-line, navigate to where you downloaded **QInfer**, then run::
+some examples. We provide a number of `Jupyter Notebook`_-based examples
+in the `qinfer-examples`_ repository. These examples can be viewed online
+using `nbviewer`_, or can be run online using `binder`_ without installing any additional
+software.
 
-    cd python-qinfer/examples
-    ipython notebook
+The examples can also be run locally, using the instructions available
+at `qinfer-examples`_.
 
-Alternatively, IPython provides an online viewer for reading notebook files:
-
-- `Plotting Example <http://nbviewer.ipython.org/github/csferrie/python-qinfer/blob/master/examples/plot_example.ipynb>`_
-- `Noisy Coin Example <http://nbviewer.ipython.org/github/csferrie/python-qinfer/blob/master/examples/Noisy%20Coin%20Example.ipynb>`_
-
-More details can be found in the :ref:`examples` section.
-
-.. _Enthought Canopy: https://www.enthought.com/products/canopy/
-.. _Python(x,y): http://code.google.com/p/pythonxy/
-.. _matplotlib: http://matplotlib.org/
-.. _SciKit-Learn: http://scikit-learn.org/stable/
+.. _Anaconda distribution: https://www.continuum.io/downloads
 .. _Sphinx: http://sphinx-doc.org/
-.. _IPython Notebook: http://ipython.org/ipython-doc/stable/interactive/notebook.html
-
-.. _examples: https://github.com/csferrie/python-qinfer/tree/master/examples
+.. _Jupyter Notebook: http://jupyter.org/
+.. _nbviewer: http://nbviewer.jupyter.org/github/qinfer/qinfer-examples/tree/master/
+.. _binder: http://mybinder.org/repo/qinfer/qinfer-examples
+.. _qinfer-examples: https://github.com/QInfer/qinfer-examples

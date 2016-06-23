@@ -25,9 +25,13 @@
 
 ## FEATURES ###################################################################
 
+from __future__ import absolute_import
+from __future__ import print_function
 from __future__ import division
 
 ## IMPORTS ####################################################################
+
+from builtins import range
 
 import warnings
 
@@ -211,6 +215,23 @@ def compactspace(scale, n):
     compact_xs = np.linspace(0, 1, n + 2)[1:-1]
     return logit(compact_xs)
            
+
+def pretty_time(secs, force_h=False, force_m=False):
+    if secs > 86400:
+        return "{d} days, ".format(d=int(secs//86400)) + pretty_time(secs % 86400, force_h=True)
+    elif force_h or secs > 3600:
+        return "{h}:".format(h=int(secs//3600)) + pretty_time(secs % 3600, force_m=True)
+    elif force_m or secs > 60:
+        return (
+            "{m:0>2}:{s:0>2}" if force_m else "{m}:{s:0>2}"
+        ).format(m=int(secs//60), s=int(secs%60))
+    else:
+        return "{0:0.2f} seconds".format(secs)
+
+def safe_shape(arr, idx=0, default=1):
+    shape = np.shape(arr)
+    return shape[idx] if idx < len(shape) else default
+
     
 #==============================================================================
 #Test Code
@@ -233,7 +254,7 @@ if __name__ == "__main__":
     
     # compute mvee
     A, centroid = mvee(points)
-    print A
+    print(A)
     
     # point it and some other stuff
     U, D, V = la.svd(A)    
@@ -245,8 +266,8 @@ if __name__ == "__main__":
     y=ry*np.sin(u)*np.cos(v)
     z=rz*np.sin(v)
             
-    for idx in xrange(x.shape[0]):
-        for idy in xrange(y.shape[1]):
+    for idx in range(x.shape[0]):
+        for idy in range(y.shape[1]):
             x[idx,idy],y[idx,idy],z[idx,idy] = np.dot(np.transpose(V),np.array([x[idx,idy],y[idx,idy],z[idx,idy]])) + centroid
             
     

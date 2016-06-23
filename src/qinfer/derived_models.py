@@ -25,6 +25,8 @@
 
 ## FEATURES ###################################################################
 
+from __future__ import absolute_import
+from __future__ import print_function
 from __future__ import division # Ensures that a/b is always a float.
 
 ## ALL ########################################################################
@@ -39,6 +41,9 @@ __all__ = [
 ]
 
 ## IMPORTS ####################################################################
+
+from builtins import range
+from functools import reduce
 
 import numpy as np
 from scipy.stats import binom
@@ -88,6 +93,10 @@ class DerivedModel(Model):
     @property
     def modelparam_names(self):
         return self.underlying_model.modelparam_names
+
+    @property
+    def Q(self):
+        return self.underlying_model.Q
     
     def clear_cache(self):
         self.underlying_model.clear_cache()
@@ -256,10 +265,12 @@ class BinomialModel(DerivedModel):
             expparams['x'] if self._expparams_scalar else expparams)
         
         # Now we concatenate over outcomes.
-        return np.concatenate([
+        L = np.concatenate([
             binomial_pdf(expparams['n_meas'][np.newaxis, :], outcomes[idx], pr1)
-            for idx in xrange(outcomes.shape[0])
+            for idx in range(outcomes.shape[0])
             ]) 
+        assert not np.any(np.isnan(L))
+        return L
             
     def simulate_experiment(self, modelparams, expparams, repeat=1):
         # FIXME: uncommenting causes a slowdown, but we need to call
@@ -283,7 +294,7 @@ class BinomialModel(DerivedModel):
         )
         os = np.concatenate([
             sample()
-            for idx in xrange(repeat)
+            for idx in range(repeat)
         ], axis=0)
         return os[0,0,0] if os.size == 1 else os
         
@@ -350,20 +361,21 @@ class RandomWalkModel(DerivedModel):
     def __init__(self, underlying_model, step_distribution):
         self._step_dist = step_distribution
         
-        if self._model.n_modelparams != self._step_dist.n_rvs:
+        super(RandomWalkModel, self).__init__(underlying_model)
+        
+        if self.underlying_model.n_modelparams != self._step_dist.n_rvs:
             raise TypeError("Step distribution does not match model dimension.")
         
-        super(RandomWalkModel, self).__init__(underlying_model)
             
     ## METHODS ##
     
     def likelihood(self, outcomes, modelparams, expparams):
         super(RandomWalkModel, self).likelihood(outcomes, modelparams, expparams)
-        return self._model.likelihood(outcomes, modelparams, expparams)
+        return self.underlying_model.likelihood(outcomes, modelparams, expparams)
         
     def simulate_experiment(self, modelparams, expparams, repeat=1):
         super(RandomWalkModel, self).simulate_experiment(modelparams, expparams, repeat)
-        return self._model.simulate_experiment(modelparams, expparams, repeat)
+        return self.underlying_model.simulate_experiment(modelparams, expparams, repeat)
         
     def update_timestep(self, modelparams, expparams):
         # Note that the timestep update is presumed to be independent of the
@@ -380,7 +392,7 @@ class RandomWalkModel(DerivedModel):
 if __name__ == "__main__":
     
     import operator as op
-    from test_models import SimplePrecessionModel
+    from .test_models import SimplePrecessionModel
     
     m = BinomialModel(SimplePrecessionModel())
     
@@ -391,7 +403,7 @@ if __name__ == "__main__":
     L = m.likelihood(
         os, mps, eps
     )
-    print L
+    print(L)
     
     assert m.call_count == reduce(op.mul, [os.shape[0], mps.shape[0], eps.shape[0]]), "Call count inaccurate."
     assert L.shape == (os.shape[0], mps.shape[0], eps.shape[0]), "Shape mismatch."

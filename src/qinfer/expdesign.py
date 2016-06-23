@@ -25,6 +25,7 @@
 
 ## FEATURES ###################################################################
 
+from __future__ import absolute_import
 from __future__ import division
 
 ## ALL ########################################################################
@@ -40,6 +41,8 @@ __all__ = [
 ]
 
 ## IMPORTS ####################################################################
+
+from future.utils import with_metaclass
 
 import numpy as np
 
@@ -60,7 +63,7 @@ def identity(arg): return arg
 
 OptimizationAlgorithms = enum.enum("NULL", "CG", "NCG", "NELDER_MEAD")
 
-class Heuristic(object):
+class Heuristic(with_metaclass(ABCMeta, object)):
     r"""
     Defines a heuristic used for selecting new experiments without explicit
     optimization of the risk. As an example, the :math:`t_k = (9/8)^k`
@@ -72,8 +75,7 @@ class Heuristic(object):
     Note that the design of this abstract base class is still being decided,
     such that it is a placeholder for now.
     """
-    __metaclass__ = ABCMeta
-    
+
     def __init__(self, updater):
         self._updater = updater
     
@@ -137,7 +139,7 @@ class ExpSparseHeuristic(Heuristic):
             return np.array([t], dtype=dtype)
         else:
             eps = np.empty((1,), dtype=dtype)
-            for field, value in self._other_fields.iteritems():
+            for field, value in self._other_fields.items():
                 eps[field] = value
             eps[self._t_field] = t
             return eps
@@ -210,7 +212,7 @@ class PGH(Heuristic):
         eps[self._x_] = self._inv_func(x)
         eps[self._t]  = self._t_func(1 / self._updater.model.distance(x, xp))
         
-        for field, value in self._other_fields.iteritems():
+        for field, value in self._other_fields.items():
             eps[field] = value
         
         return eps

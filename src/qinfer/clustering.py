@@ -25,6 +25,8 @@
 
 ## FEATURES ###################################################################
 
+from __future__ import absolute_import
+from __future__ import print_function
 from __future__ import division
 
 ## ALL ########################################################################
@@ -36,6 +38,8 @@ __all__ = [
 ]
 
 ## IMPORTS ####################################################################
+
+from builtins import range
 
 import warnings
 
@@ -52,8 +56,13 @@ try:
     import sklearn.metrics
     import sklearn.metrics.pairwise
 except ImportError:
-    warnings.warn("Could not import scikit-learn. Some features may not work.",
-        ImportWarning)
+    try:
+        import logging
+        logging.getLogger(__name__)
+        logger.addHandler(logging.NullHandler())
+        logger.info("Could not import scikit-learn. Clustering support is disabled.")
+    except:
+        pass
     sklearn = None
 
 ## CONSTANTS ##################################################################
@@ -119,14 +128,14 @@ def particle_clusters(
     
     # Print debugging info.
     if not quiet:
-        print "[Clustering] DBSCAN identified {} cluster{}. "\
+        print("[Clustering] DBSCAN identified {} cluster{}. "\
               "{} particles identified as NOISE.".format(
                   n_clusters, "s" if n_clusters > 1 else "", n_noise
-              )
+              ))
         
     # Loop over clusters, calling the secondary resampler for each.
     # The loop should include -1 if noise was found.
-    for idx_cluster in xrange(-1 if is_noise else 0, n_clusters):
+    for idx_cluster in range(-1 if is_noise else 0, n_clusters):
         # Grab a boolean array identifying the particles in a  particular
         # cluster.
         this_cluster = cluster_labels == idx_cluster

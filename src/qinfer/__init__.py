@@ -23,11 +23,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ##
 
-## VERSION METADATA ###########################################################
-# In keeping with PEP-396, we define a version number of the form
-# {major}.{minor}[.{postrelease}]{prerelease-tag}
-
-__version__ = '1.0b1'
+from __future__ import absolute_import
+from qinfer.version import version as __version__
 
 ## IMPORTS ####################################################################
 # These imports control what is made available by importing qinfer itself.
@@ -43,8 +40,12 @@ from qinfer.abstract_model import *
 from qinfer.parallel import *
 from qinfer.score import *
 from qinfer.rb import *
+from qinfer.smc import *
 from qinfer.unstructured_models import *
 from qinfer.derived_models import *
+from qinfer.ipy import *
+from qinfer.simple_est import *
+from qinfer.resamplers import *
 
 import qinfer.tomography
 
