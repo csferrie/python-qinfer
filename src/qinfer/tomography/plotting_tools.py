@@ -40,7 +40,7 @@ import numpy as np
 
 try:
     import matplotlib.pyplot as plt
-    from matplotlib.patches import Ellipse
+    from matplotlib.patches import Ellipse, Polygon
 except ImportError:
     import warnings
     warnings.warn("Could not import matplotlib.")
@@ -50,14 +50,8 @@ except ImportError:
 # Since the rest of QInfer does not require QuTiP,
 # we need to import it in a way that we don't propagate exceptions if QuTiP
 # is missing or is too early a version.
-try:
-    import qutip as qt
-    from distutils.version import LooseVersion
-    _qt_version = LooseVersion(qt.version.version)
-    if _qt_version < LooseVersion('3.1'):
-        qt = None
-except ImportError:
-    qt = None
+from qinfer.utils import get_qutip_module
+qt = get_qutip_module('3.2')
 
 ## EXPORTS ###################################################################
 
@@ -160,7 +154,7 @@ def plot_rebit_prior(prior, rebit_axes=REBIT_AXES,
     """
     Plots rebit states drawn from a given prior.
 
-    :param qinfer.tomography.DensityOperatorDistribution: Distribution over
+    :param qinfer.tomography.DensityOperatorDistribution prior: Distribution over
         rebit states to plot.
     :param list rebit_axes: List containing indices for the :math:`x`
         and :math:`z` axes.
@@ -201,7 +195,9 @@ def plot_rebit_prior(prior, rebit_axes=REBIT_AXES,
 
 
 def plot_rebit_posterior(updater, prior=None, true_state=None, n_std=3, rebit_axes=REBIT_AXES, true_size=250,
-            legend=True
+            legend=True,
+            level=0.95,
+            region_est_method='cov'
     ):
     """
     Plots posterior distributions over rebits, including covariance ellipsoids
@@ -212,9 +208,14 @@ def plot_rebit_posterior(updater, prior=None, true_state=None, n_std=3, rebit_ax
     :param np.ndarray true_state: Model parameters for "true" state to plot
         as comparison.
     :param float n_std: Number of standard deviations out from the mean
-        at which to draw the covariance ellipse.
+        at which to draw the covariance ellipse. Only used if
+        region_est_method is ``'cov'``.
+    :param float level: Credibility level to use for computing
+        region estimators from convex hulls.
     :param list rebit_axes: List containing indices for the :math:`x`
         and :math:`z` axes.
+    :param str region_est_method: Method to use to draw region estimation.
+        Must be one of None, ``'cov'`` or ``'hull'``.
     """
     pallette = plt.rcParams['axes.color_cycle']
 
@@ -246,22 +247,38 @@ def plot_rebit_posterior(updater, prior=None, true_state=None, n_std=3, rebit_ax
         rebit_axes=rebit_axes
     )
 
-    # Multiplying by sqrt{2} to rescale to Bloch ball.
-    cov = 2 * updater.est_covariance_mtx()
-    # Use fancy indexing to cut out all but the desired submatrix.
-    cov = cov[rebit_axes, :][:, rebit_axes]
-    plot_cov_ellipse(
-        cov, updater.est_mean()[rebit_axes] * np.sqrt(2),
-        nstd=n_std,
-        edgecolor='k', fill=True, lw=2,
-        facecolor=pallette[0],
-        alpha=0.4,
-        zorder=-9,
-        label='Posterior Cov Ellipse ($Z = {}$)'.format(n_std)
-    )
+    if region_est_method == 'cov':
+        # Multiplying by sqrt{2} to rescale to Bloch ball.
+        cov = 2 * updater.est_covariance_mtx()
+        # Use fancy indexing to cut out all but the desired submatrix.
+        cov = cov[rebit_axes, :][:, rebit_axes]
+        plot_cov_ellipse(
+            cov, updater.est_mean()[rebit_axes] * np.sqrt(2),
+            nstd=n_std,
+            edgecolor='k', fill=True, lw=2,
+            facecolor=pallette[0],
+            alpha=0.4,
+            zorder=-9,
+            label='Posterior Cov Ellipse ($Z = {}$)'.format(n_std)
+        )
+
+    elif region_est_method == 'hull':
+        # Find the convex hull from the updater, projected
+        # on the rebit axes.
+        faces, vertices = updater.region_est_hull(level, modelparam_slice=rebit_axes)
+        polygon = Polygon(vertices * np.sqrt(2),
+            facecolor=pallette[0], alpha=0.4, zorder=-9,
+            label=r'Credible Region ($\alpha = {}$)'.format(level),
+            edgecolor='k', lw=2, fill=True
+        )
+        # TODO: consolidate add_patch code with that above.
+        plt.gca().add_patch(polygon)
+
+        
     plot_decorate_rebits(updater.model.base_model._basis,
         rebit_axes=rebit_axes
     )
+
     if legend:
         plt.legend(loc='lower left', ncol=4, scatterpoints=1)
 

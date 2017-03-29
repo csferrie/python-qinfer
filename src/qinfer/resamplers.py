@@ -32,6 +32,7 @@ from __future__ import division
 
 # We use __all__ to restrict what globals are visible to external modules.
 __all__ = [
+    'Resampler',
     'LiuWestResampler'
 ]
 
@@ -41,7 +42,10 @@ import numpy as np
 import scipy.linalg as la
 import warnings
 
-from .utils import outer_product, particle_meanfn, particle_covariance_mtx
+from .utils import outer_product, particle_meanfn, particle_covariance_mtx, sqrtm_psd
+
+from abc import ABCMeta, abstractmethod, abstractproperty
+from future.utils import with_metaclass
 
 import qinfer.clustering
 from qinfer._exceptions import ResamplerWarning, ResamplerError
@@ -54,6 +58,35 @@ logger.addHandler(logging.NullHandler())
 
 ## CLASSES ####################################################################
 
+class Resampler(with_metaclass(ABCMeta, object)):
+    @abstractmethod
+    def __call__(self,  model, particle_weights, particle_locations,
+        n_particles=None,
+        precomputed_mean=None, precomputed_cov=None
+    ):
+        """
+        Resample the particles given by ``particle_weights`` and
+        ``particle_locations``, drawing ``n_particles`` new particles.
+
+        :param Model model: Model from which the particles are drawn,
+            used to define the valid region for resampling.
+        :param np.ndarray particle_weights: Weights of each particle,
+            represented as an array of shape ``(n_original_particles, )``
+            and dtype :obj:`float`.
+        :param np.ndarray particle_locations: Locations of each particle,
+            represented as an array of shape ``(n_original_particles,
+            model.n_modelparams)`` and dtype :obj:`float`.
+        :param int n_particles: Number of new particles to draw, or
+            `None` to draw the same number as the original distribution.
+        :param np.ndarray precomputed_mean: Mean of the original
+            distribution, or `None` if this should be computed by the resampler.
+        :param np.ndarray precomputed_cov: Covariance of the original
+            distribution, or `None` if this should be computed by the resampler.
+
+        :return np.ndarray new_weights: Weights of each new particle.
+        :return np.ndarray new_locations: Locations of each new particle.        
+        """
+
 class ClusteringResampler(object):
     r"""
     Creates a resampler that breaks the particles into clusters, then applies
@@ -64,6 +97,7 @@ class ClusteringResampler(object):
     """
     
     def __init__(self, eps=0.5, secondary_resampler=None, min_particles=5, metric='euclidean', weighted=False, w_pow=0.5, quiet=True):
+        warnings.warn("This class is deprecated, and will be removed in a future version.", DeprecationWarning)
         self.secondary_resampler = (
             secondary_resampler
             if secondary_resampler is not None
@@ -127,7 +161,7 @@ class ClusteringResampler(object):
             
         return new_weights, new_locs
 
-class LiuWestResampler(object):
+class LiuWestResampler(Resampler):
     r"""
     Creates a resampler instance that applies the algorithm of
     [LW01]_ to redistribute the particles.
@@ -148,6 +182,12 @@ class LiuWestResampler(object):
         has zero norm.
     :param callable kernel: Callable function ``kernel(*shape)`` that returns samples
         from a resampling distribution with mean 0 and variance 1.
+    :param int default_n_particles: The default number of particles to draw during
+        a resampling action. If ``None``, the number of redrawn particles 
+        redrawn will be equal to the number of particles given.
+        The value of ``default_n_particles`` can be overridden by any integer
+        value of ``n_particles`` given to ``__call__``.
+        
         
     .. warning::
     
@@ -158,9 +198,11 @@ class LiuWestResampler(object):
     """
     def __init__(self,
             a=0.98, h=None, maxiter=1000, debug=False, postselect=True,
-            zero_cov_comp=1e-10,
+            zero_cov_comp=1e-10, 
+            default_n_particles=None,
             kernel=np.random.randn
         ):
+        self._default_n_particles = default_n_particles
         self.a = a # Implicitly calls the property setter below to set _h.
         if h is not None:
             self._override_h = True
@@ -187,7 +229,10 @@ class LiuWestResampler(object):
 
     ## METHODS ##
     
-    def __call__(self, model, particle_weights, particle_locations, precomputed_mean=None, precomputed_cov=None):
+    def __call__(self, model, particle_weights, particle_locations,
+        n_particles=None,
+        precomputed_mean=None, precomputed_cov=None
+    ):
         """
         Resample the particles according to algorithm given in 
         [LW01]_.
@@ -206,6 +251,12 @@ class LiuWestResampler(object):
         else:
             cov = precomputed_cov
         
+        if n_particles is None:
+            if self._default_n_particles is None:
+                n_particles = l.shape[0]
+            else:
+                n_particles = self._default_n_particles
+        
         # parameters in the Liu and West algorithm            
         a, h = self._a, self._h
         if la.norm(cov, 'fro') == 0:
@@ -220,23 +271,23 @@ class LiuWestResampler(object):
                 ResamplerWarning
             )
             cov = self._zero_cov_comp * np.eye(cov.shape[0])
-        S, S_err = la.sqrtm(cov, disp=False)
+        S, S_err = sqrtm_psd(cov)
         if not np.isfinite(S_err):
             raise ResamplerError(
                 "Infinite error in computing the square root of the "
                 "covariance matrix. Check that n_ess is not too small.")
         S = np.real(h * S)
-        n_ms, n_mp = l.shape
+        n_mp = l.shape[1]
         
-        new_locs = np.empty(l.shape)        
+        new_locs = np.empty((n_particles, n_mp))        
         cumsum_weights = np.cumsum(w)
         
-        idxs_to_resample = np.arange(n_ms)
+        idxs_to_resample = np.arange(n_particles, dtype=int)
         
         # Preallocate js and mus so that we don't have rapid allocation and
         # deallocation.
         js = np.empty(idxs_to_resample.shape, dtype=int)
-        mus = np.empty(l.shape, dtype=l.dtype)
+        mus = np.empty(new_locs.shape, dtype=l.dtype)
         
         # Loop as long as there are any particles left to resample.
         n_iters = 0

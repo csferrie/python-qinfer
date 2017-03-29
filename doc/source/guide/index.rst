@@ -13,11 +13,15 @@ User's Guide
 .. toctree::
     :maxdepth: 2
     
+    simple_est
     distributions
     models
     smc
-    expdesign
+    heuristics
     rb
+    tomography
+    timedep
+    perf_testing
     parallel
-    robustness
+    interop
     

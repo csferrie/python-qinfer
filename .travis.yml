@@ -6,9 +6,33 @@ python:
   - "3.4"
   - "3.5"
 
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      # QuTiP builds are currently broken under very old versions
+      # of GCC, such as are installed by default with Travis CI.
+      - gcc-4.8
+      - texlive
+      - texlive-latex-extra
+      - texlive-fonts-extra
+
+# Explicitly add doctest support as separate parts of the build matrix,
+# since these tests require additional packages that should be optional.
+matrix:
+  include:
+    - python: "2.7"
+      env: DOCTEST=1
+    - python: "3.5"
+      env: DOCTEST=1 
+
 env:
   global:
-    - secure: 
+    - CC: gcc-4.8
+    - MPLBACKEND: Agg
+    - PYPI_USERNAME: cgranade
+    - secure: XhLK4jvMAdrSVHa2u4AhZGA6aseKGaS7GJy+HHq/O6w4DnECKvkagjm07bA0aK/OW+MlTy7hh4COf/OaUSmsciwtZ4JpJ2K5UzwUjmZAxXorkmi5aF6FCPfT1id5Qz0vWF1QLO1Fl4fEH3cHuHNL2pJ3dURK4DitehKgjEHwhm8=
 
 notifications:
   email: false
@@ -20,18 +44,41 @@ before_install:
   - export PATH=$HOME/miniconda/bin:$PATH
   - export PATH=$HOME/miniconda:$PATH
   - conda update --yes conda
+  - conda create --yes -n=travis python=$TRAVIS_PYTHON_VERSION
+  - source activate travis
 
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib scikit-learn sphinx
+  - conda install --yes numpy scipy matplotlib scikit-learn sphinx
+  # Before proceeding to install anything else, we debu
+  # by making sure that the conda install didn't break matplotlib.
+  - python -c "import matplotlib.pyplot as plt; print('Using MPL backend:'); print(plt.get_backend())" 
   - pip install -r requirements.txt
+  # Before proceeding, we pause to list all installed conda and pip
+  # packages for later debugging.
+  - conda list
+  - pip list
+  # Now we run the installer for QInfer itself.
   - python setup.py install
-  - cd src/
+  # We need to run doctest, which requires installing at least what
+  # ReadTheDocs has. That said, we require that QInfer installs
+  # without the use of the additional optional libraries listed
+  # in rtd-requirements.txt, so we place this install command
+  # after the primary installation above.
+  # Note that as a work around for qutip/qutip#426, we must install
+  # cython first.
+  - if [[ "${DOCTEST}" == "1" ]]; then
+      pip install cython;
+      pip install -r doc/rtd-requirements.txt;
+    fi
 
 script:
-  - py.test --cov-config .coveragerc --cov=qinfer
-  - pylint --py3k qinfer/
-  - cd $TRAVIS_BUILD_DIR/doc
-  - make doctest
+  - py.test --cov-config .coveragerc --cov=qinfer src/qinfer/
+  - pylint --py3k src/qinfer/
+  - if [[ "${DOCTEST}" == "1" ]]; then
+      cd $TRAVIS_BUILD_DIR/doc;
+      make doctest;
+      make latexpdf;
+    fi
 
 after_success:
   - coveralls

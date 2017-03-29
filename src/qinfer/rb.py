@@ -39,7 +39,7 @@ __all__ = [
 from itertools import starmap
 
 import numpy as np
-from qinfer.abstract_model import Model, DifferentiableModel
+from qinfer.abstract_model import FiniteOutcomeModel, DifferentiableModel
 
 from operator import mul
 
@@ -67,7 +67,7 @@ def F(p, d=2):
 
 ## CLASSES ####################################################################
 
-class RandomizedBenchmarkingModel(DifferentiableModel):
+class RandomizedBenchmarkingModel(FiniteOutcomeModel, DifferentiableModel):
     r"""
     Implements the randomized benchmarking or interleaved randomized
     benchmarking protocol, such that the depolarizing strength :math:`p`
@@ -80,6 +80,18 @@ class RandomizedBenchmarkingModel(DifferentiableModel):
         protocol, with :math:`\tilde{p}` being the depolarizing parameter for
         the interleaved gate and with :math:`p_{\text{ref}}` being the reference
         parameter.
+
+    :modelparam p: Fidelity of the twirled error channel :math:`\Lambda`, represented as
+        a decay rate :math:`p = (d F - 1) / (d - 1)`, where :math:`F`
+        is the fidelity and :math:`d` is the dimension of the Hilbert space.
+    :modelparam A: Scale of the randomized benchmarking decay, defined as
+        :math:`\Tr[Q \Lambda(\rho - \ident / d)]`, where :math:`Q` is the final
+        measurement, and where :math:`\ident` is the initial preparation.
+    :modelparam B: Offset of the randomized benchmarking decay, defined as
+        :math:`\Tr[Q \Lambda(\ident / d)]`.
+
+    :expparam int m: Length of the randomized benchmarking sequence
+        that was measured.
     """
     # TODO: add citations to the above docstring.
 
@@ -164,7 +176,7 @@ class RandomizedBenchmarkingModel(DifferentiableModel):
         pr0 = np.zeros((modelparams.shape[0], expparams.shape[0]))
         pr0[:, :] = 1 - (A * (p ** m) + B)
         
-        return Model.pr0_to_likelihood_array(outcomes, pr0)
+        return FiniteOutcomeModel.pr0_to_likelihood_array(outcomes, pr0)
         
     def score(self, outcomes, modelparams, expparams, return_L=False):
 

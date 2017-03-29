@@ -35,7 +35,6 @@ __all__ = ['DirectViewParallelizedModel']
 ## IMPORTS ###################################################################
 
 import numpy as np
-from qinfer.abstract_model import Model
 from qinfer.derived_models import DerivedModel
 
 import warnings
@@ -66,12 +65,16 @@ logger.addHandler(logging.NullHandler())
 
 class DirectViewParallelizedModel(DerivedModel):
     r"""
-    Given an instance of a `Model`, parallelizes execution of that model's
+    Given an instance of a :class:`Model`, parallelizes execution of that model's
     likelihood by breaking the ``modelparams`` array into segments and
     executing a segment on each member of a :class:`~ipyparallel.DirectView`.
     
-    This :ref:`Model` assumes that it has ownership over the DirectView, such
+    This :class:`Model` assumes that it has ownership over the DirectView, such
     that no other processes will send tasks during the lifetime of the Model.
+
+    If you are having trouble pickling your model, consider switching to 
+    ``dill`` by calling ``direct_view.use_dill()``. This mode gives more support 
+    for closures.
     
     :param qinfer.Model serial_model: Model to be parallelized. This
         model will be distributed to the engines in the direct view, such that
@@ -93,7 +96,7 @@ class DirectViewParallelizedModel(DerivedModel):
     
     ## INITIALIZER ##
     
-    def __init__(self, serial_model, direct_view, purge_client=False, serial_theshold=None):
+    def __init__(self, serial_model, direct_view, purge_client=False, serial_threshold=None):
         if ipp is None:
             raise RuntimeError(
                 "This model requires IPython parallelization support, "
@@ -104,7 +107,7 @@ class DirectViewParallelizedModel(DerivedModel):
         self._purge_client = purge_client
         self._serial_threshold = (
             10 * self.n_engines
-            if serial_theshold is None else int(serial_theshold)
+            if serial_threshold is None else int(serial_threshold)
         )
         
         super(DirectViewParallelizedModel, self).__init__(serial_model)
@@ -145,7 +148,7 @@ class DirectViewParallelizedModel(DerivedModel):
         The number of engines seen by the direct view owned by this parallelized
         model.
 
-        :rtype int:
+        :rtype: int
         """
         return len(self._dv) if self._dv is not None else 0
             
@@ -168,17 +171,20 @@ class DirectViewParallelizedModel(DerivedModel):
             pass
     
     def likelihood(self, outcomes, modelparams, expparams):
-        # By calling the superclass implementation, we can consolidate
-        # call counting there.
         """
         Returns the likelihood for the underlying (serial) model, distributing
         the model parameter array across the engines controlled by this
-        parallelized model.
+        parallelized model. Returns what the serial model would return, see
+        :attr:`~Model.likelihood`
         """
+        # By calling the superclass implementation, we can consolidate
+        # call counting there.
         super(DirectViewParallelizedModel, self).likelihood(outcomes, modelparams, expparams)
 
-        if modelparams.shape[1] <= self._serial_threshold:
-            return self._serial_model.likelihood(outcomes, modelparams, expparams)
+        # If there's less models than some threshold, just use the serial model.
+        # By default, we'll set that threshold to be the number of engines * 10.
+        if modelparams.shape[0] <= self._serial_threshold:
+            return self.underlying_model.likelihood(outcomes, modelparams, expparams)
         
         if self._dv is None:
             raise RuntimeError(
@@ -186,9 +192,6 @@ class DirectViewParallelizedModel(DerivedModel):
                 "loaded from a pickle or NumPy saved array without providing a "
                 "new direct view."
             )
-
-        # If there's less models than some threshold, just use the serial model.
-        # By default, we'll set that threshold to be the number of engines * 10.
 
         # Need to decorate with interactive to overcome namespace issues with
         # remote engines.
@@ -205,8 +208,71 @@ class DirectViewParallelizedModel(DerivedModel):
             np.array_split(modelparams, self.n_engines, axis=0),
             [self.underlying_model] * self.n_engines,
             [outcomes] * self.n_engines,
-            [expparams] * self.n_engines,
+            [expparams] * self.n_engines
         )
 
         return np.concatenate(L, axis=1)
+
+    def simulate_experiment(self, modelparams, expparams, repeat=1, split_by_modelparams=True):
+        """
+        Simulates the underlying (serial) model using the parallel 
+        engines. Returns what the serial model would return, see
+        :attr:`~Simulatable.simulate_experiment`
+
+        :param bool split_by_modelparams: If ``True``, splits up
+            ``modelparams`` into `n_engines` chunks and distributes 
+            across engines. If ``False``, splits up ``expparams``.
+        """
+        # By calling the superclass implementation, we can consolidate
+        # simulation counting there.
+        super(DirectViewParallelizedModel, self).simulate_experiment(modelparams, expparams, repeat=repeat)
+
+        if self._dv is None:
+                raise RuntimeError(
+                    "No direct view provided; this may be because the instance was "
+                    "loaded from a pickle or NumPy saved array without providing a "
+                    "new direct view."
+                )
+
+        # Need to decorate with interactive to overcome namespace issues with
+        # remote engines.
+        @interactive
+        def serial_simulator(sm, mps, eps, r):
+            return sm.simulate_experiment(mps, eps, repeat=r)
+
+        if split_by_modelparams:
+            # If there's less models than some threshold, just use the serial model.
+            # By default, we'll set that threshold to be the number of engines * 10.
+            if modelparams.shape[0] <= self._serial_threshold:
+                return self.underlying_model.simulate_experiment(modelparams, expparams, repeat=repeat)
+
+            # The trick is that serial_likelihood will be pickled, so we need to be
+            # careful about closures.
+            os = self._dv.map_sync(
+                serial_simulator,
+                [self.underlying_model] * self.n_engines,
+                np.array_split(modelparams, self.n_engines, axis=0),
+                [expparams] * self.n_engines,
+                [repeat] * self.n_engines
+            )
+
+            return np.concatenate(os, axis=0)
+
+        else:
+            # If there's less models than some threshold, just use the serial model.
+            # By default, we'll set that threshold to be the number of engines * 10.
+            if expparams.shape[0] <= self._serial_threshold:
+                return self.underlying_model.simulate_experiment(modelparams, expparams, repeat=repeat)
+
+            # The trick is that serial_likelihood will be pickled, so we need to be
+            # careful about closures.
+            os = self._dv.map_sync(
+                serial_simulator,
+                [self.underlying_model] * self.n_engines,
+                [modelparams] * self.n_engines,
+                np.array_split(expparams, self.n_engines, axis=0),
+                [repeat] * self.n_engines
+            )
+
+            return np.concatenate(os, axis=1)
 

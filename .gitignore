@@ -1,5 +1,8 @@
 src/qinfer/version.py
 
+*.sublime-project
+*.sublime-workspace
+
 ## Temporary files ##
 *~
 *.tmp
@@ -8,6 +11,7 @@ src/qinfer/version.py
 # Migration #
 Backup/*
 UpgradeLog.htm
+.vscode
 
 ## Pycharm Stuff ##
 .idea
@@ -54,6 +58,7 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+.cache
 nosetests.xml
 
 #Translations
@@ -61,3 +66,6 @@ nosetests.xml
 
 #Mr Developer
 .mr.developer.cfg
+
+# cprofile profile file
+profile
