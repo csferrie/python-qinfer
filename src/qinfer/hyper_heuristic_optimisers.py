@@ -1,23 +1,10 @@
-
-
-## FEATURES ###################################################################
-
-from __future__ import absolute_import
 from __future__ import division
 
-## IMPORTS ####################################################################
-
-import numpy as np
 import random
+import numpy as np
 from functools import partial
-from qinfer.perf_testing import perf_test_multiple
+from qinfer.perf_testing import perf_test_multiple, apply_serial
 from qinfer import distributions
-    
-## CLASSES ####################################################################
-
-__all__ = [
-    'ParticleSwarmOptimiser'
-]
 
 class HyperHeuristicOptimiser(object):
     '''
@@ -45,7 +32,7 @@ class HyperHeuristicOptimiser(object):
         self._funct_kwargs = funct_kwargs
         
         if fitness_function is None: # Default to calling perf test multiple
-            self._optimisable = PerfTestMultipleAbstractor(
+            self._fitness_function = PerfTestMultipleAbstractor(
                 self._param_names,
                 *self._funct_args,
                 **self._funct_kwargs
@@ -57,8 +44,8 @@ class HyperHeuristicOptimiser(object):
     def fitness_function(self, params):
         return self._fitness_function(params)
     
-    def parrallel(self):
-        raise NotImplementedError("This optimiser does not have parrallel support. To resolve this issue, level an appropriate criticism at the developer.")
+    def parallel(self):
+        raise NotImplementedError("This optimiser does not have parallel support.")
 
 class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
     '''
@@ -77,7 +64,7 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
         omega_v=0.35, 
         phi_p=0.25, 
         phi_g=0.5,
-        serial_map=map
+        map=map
         ):
         self._fitness_dt = np.dtype([
             ('params', np.float64, (self._n_free_params,)),
@@ -102,7 +89,7 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
 
         # Calculate the initial particle fitnesses
         self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
-                                                            serial_map=serial_map)
+                                                            map=map)
 
         # Calculate the positions of the attractors
         local_attractors = self._fitness[0]
@@ -133,7 +120,7 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
             # Recalculate the fitness function
             self._fitness[itr]["fitness"] = self.evaluate_fitness(
                 self._fitness[itr]["params"],
-                serial_map=serial_map)
+                map=map)
 
             # Find the new attractors
             local_attractors, global_attractor = self.update_attractors(
@@ -151,10 +138,9 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
 
         return global_attractor
 
-    def evaluate_fitness(self, particles, serial_map):
+    def evaluate_fitness(self, particles, map=map):
         fitness_function = partial(self.fitness_function)
-        fitness = np.empty([len(particles)], dtype=np.float64)
-        fitness = serial_map(self.fitness_function, particles)
+        fitness = map(self.fitness_function, particles)
         return fitness
         
     def update_positions(self, positions, velocities):
@@ -174,14 +160,17 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
         global_attractor = local_attractors[np.argmin(local_attractors["fitness"])]
         return local_attractors, global_attractor
     
-class PerfTestMultipleAbstractor:
+class PerfTestMultipleAbstractor(object):
     def __init__(self, 
                  param_names,
                  evaluation_function = None, 
                  *args, 
                  **kwargs):
-        self._heuristic = kwargs['heuristic_class']
-        del kwargs['heuristic_class']
+        try:
+            self._heuristic = kwargs['heuristic_class']
+            del kwargs['heuristic_class']
+        except:
+            raise NotImplementedError("No heuristic class was passed.")
         self._args = args
         self._kwargs = kwargs
         self._param_names = param_names
