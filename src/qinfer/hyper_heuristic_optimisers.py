@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, absolute_import, print_function
 
 import random
 import numpy as np
@@ -6,9 +6,9 @@ from functools import partial
 from qinfer.perf_testing import perf_test_multiple, apply_serial
 from qinfer import distributions
 
-class HyperHeuristicOptimiser(object):
+class Optimiser(object):
     '''
-        A generic hyper-heuristic optimiser class that is inherited by the other optimisation functions.
+        A generic optimiser class that is inherited by the other optimisation functions.
 
         :param np.ndarray param_names: The list of parameters that are being searched over.
         :param function fitness_function: The function that is being optimised over, defaults to perf test multiple
@@ -47,7 +47,7 @@ class HyperHeuristicOptimiser(object):
     def parallel(self):
         raise NotImplementedError("This optimiser does not have parallel support.")
 
-class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
+class ParticleSwarmOptimiser(Optimiser):
     '''
         A particle swarm optimisation based hyperheuristic
         :param integer n_pso_iterations:
@@ -64,7 +64,7 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
         omega_v=0.35, 
         phi_p=0.25, 
         phi_g=0.5,
-        map=map
+        apply=apply_serial
         ):
         self._fitness_dt = np.dtype([
             ('params', np.float64, (self._n_free_params,)),
@@ -89,7 +89,7 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
 
         # Calculate the initial particle fitnesses
         self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
-                                                            map=map)
+                                                            apply=apply)
 
         # Calculate the positions of the attractors
         local_attractors = self._fitness[0]
@@ -120,7 +120,7 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
             # Recalculate the fitness function
             self._fitness[itr]["fitness"] = self.evaluate_fitness(
                 self._fitness[itr]["params"],
-                map=map)
+                apply=apply)
 
             # Find the new attractors
             local_attractors, global_attractor = self.update_attractors(
@@ -138,9 +138,11 @@ class ParticleSwarmOptimiser(HyperHeuristicOptimiser):
 
         return global_attractor
 
-    def evaluate_fitness(self, particles, map=map):
+    def evaluate_fitness(self, particles, apply=apply):
         fitness_function = partial(self.fitness_function)
-        fitness = map(self.fitness_function, particles)
+        #fitness = map(self.fitness_function, particles)
+        results = [apply(self.fitness_function, particle) for particle in particles]
+        fitness = [result.get() for result in results]
         return fitness
         
     def update_positions(self, positions, velocities):
@@ -167,7 +169,7 @@ class PerfTestMultipleAbstractor(object):
                  *args, 
                  **kwargs):
         try:
-            self._heuristic = kwargs['heuristic_class']
+            self._heuristic_class = kwargs['heuristic_class']
             del kwargs['heuristic_class']
         except:
             raise NotImplementedError("No heuristic class was passed.")
@@ -182,10 +184,12 @@ class PerfTestMultipleAbstractor(object):
     def __call__(self, params):
         performance = perf_test_multiple(
             *self._args,
-            heuristic_class = self._heuristic(**{
-                name: param
-                for name, param in zip(self._param_names, params)
-            }),
-            **self._kwargs
+            heuristic_class = partial(
+                self._heuristic_class, 
+                **{name: param
+                    for name, param in zip(self._param_names, params)
+                }),
+                **self._kwargs
         )
+        
         return self._evaluation_function(performance)
