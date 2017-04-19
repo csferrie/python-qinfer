@@ -38,9 +38,9 @@ from qinfer import distributions
 
 ## CLASSES ####################################################################
 
-class Optimiser(object):
+class Optimizer(object):
     '''
-        A generic optimiser class that is inherited by the other optimisation functions.
+        A generic optimizer class that is inherited by the other optimisation functions.
 
         :param np.ndarray param_names: The list of parameters that are being searched over.
         :param function fitness_function: The function that is being optimised over, defaults to perf test multiple
@@ -64,7 +64,7 @@ class Optimiser(object):
         self._funct_kwargs = funct_kwargs
         
         if fitness_function is None: # Default to calling perf test multiple
-            self._fitness_function = PerfTestMultipleAbstractor(
+            self._fitness_function = HeuristicPerformanceFitness(
                 self._param_names,
                 *self._funct_args,
                 **self._funct_kwargs
@@ -77,9 +77,9 @@ class Optimiser(object):
         return self._fitness_function(params)
     
     def parallel(self):
-        raise NotImplementedError("This optimiser does not have parallel support.")
+        raise NotImplementedError("This optimizer does not have parallel support.")
 
-class ParticleSwarmOptimiser(Optimiser):
+class ParticleSwarmOptimizer(Optimizer):
     '''
         A particle swarm optimisation based hyperheuristic
         :param integer n_pso_iterations:
@@ -200,7 +200,7 @@ class ParticleSwarmOptimiser(Optimiser):
             ('fitness', np.float64)])
 
 
-class ParticleSwarmSimpleAnnealingOptimiser(ParticleSwarmOptimiser):
+class ParticleSwarmSimpleAnnealingOptimizer(ParticleSwarmOptimizer):
 
     def __call__(self,
         n_pso_iterations=50,
@@ -293,7 +293,7 @@ class ParticleSwarmSimpleAnnealingOptimiser(ParticleSwarmOptimiser):
         return omega_v, phi_p, phi_g
 
 
-class ParticleSwarmTemperingOptimiser(ParticleSwarmOptimiser):
+class ParticleSwarmTemperingOptimizer(ParticleSwarmOptimizer):
     '''
         A particle swarm optimisation based hyperheuristic
         :param integer n_pso_iterations:
@@ -444,7 +444,7 @@ class ParticleSwarmTemperingOptimiser(ParticleSwarmOptimiser):
 
         return temper_map
             
-class PerfTestMultipleAbstractor(object):
+class HeuristicPerformanceFitness(object):
     def __init__(self, 
                  param_names,
                  evaluation_function = None, 
