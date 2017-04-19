@@ -45,18 +45,21 @@ from qinfer.tests.base_test import DerandomizedTestCase
 class TestPSO(DerandomizedTestCase):
 
     def test_pso_quad(self):
-        f_quad = lambda x: numpy.sum(10 * (x-0.5)**2)
-        hh_opt = ParticleSwarmOptimizer(['x','y','z','a'], fitness_function = f_quad)
+        f_quad = lambda x: numpy.sum(10 * (x - 0.5) ** 2)
+        hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_quad)
         hh_opt()
 
     def test_pso_sin_sq(self):
-        f_sin_sq = lambda x: numpy.sum(np.sin(x - 0.2)**2)
-        hh_opt = ParticleSwarmOptimizer(['x','y','z','a'], fitness_function = f_sin_sq)
+        f_sin_sq = lambda x: numpy.sum(np.sin(x - 0.2) ** 2)
+        hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_sin_sq)
         hh_opt()
 
     def test_pso_rosenbrock(self):
-        f_rosenbrock = lambda x: numpy.sum([((x[i+1]  - x[i]**2)**2 + (1 - x[i])**2)/len(x) for i in range(len(x)-1)])
-        hh_opt = ParticleSwarmOptimizer(['x','y','z','a'], fitness_function = f_rosenbrock)
+        f_rosenbrock = lambda x: numpy.sum([
+            ((x[i + 1]  - x[i] ** 2) ** 2 + (1 - x[i])** 2) / len(x)
+            for i in range(len(x) - 1)
+        ])
+        hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_rosenbrock)
         hh_opt()
 
 
