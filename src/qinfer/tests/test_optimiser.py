@@ -30,43 +30,47 @@ from __future__ import division # Ensures that a/b is always a float.
 
 ## IMPORTS ####################################################################
 
-from functools import partial
-
 import numpy as np
-import random as rnd
 
 from qinfer.tests.base_test import DerandomizedTestCase
 
 import qinfer.rb as rb
 import qinfer.distributions as dist
 
-from qinfer.hyper_heuristic_optimisers import ParticleSwarmOptimizer
+from qinfer.hyper_heuristic_optimisers import (
+    ParticleSwarmOptimizer,
+    ParticleSwarmSimpleAnnealingOptimizer,
+    ParticleSwarmTemperingOptimizer
+)
 from qinfer.expdesign import ExpSparseHeuristic
 
 ## CLASSES ####################################################################
 
-class TestPSO(DerandomizedTestCase):
+class OptimizerTestMethods(object):
+    # See http://stackoverflow.com/a/1323554/267841 for why this works.
 
-    def test_pso_quad(self):
+    optimizer_class = None
+
+    def test_quad(self):
         f_quad = lambda x: np.sum(10 * (x - 0.5) ** 2)
-        hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_quad)
+        hh_opt = self.optimizer_class(['x', 'y', 'z', 'a'], fitness_function=f_quad)
         hh_opt()
 
-    def test_pso_sin_sq(self):
+    def test_sin_sq(self):
         f_sin_sq = lambda x: np.sum(np.sin(x - 0.2) ** 2)
-        hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_sin_sq)
+        hh_opt = self.optimizer_class(['x', 'y', 'z', 'a'], fitness_function=f_sin_sq)
         hh_opt()
 
-    def test_pso_rosenbrock(self):
+    def test_rosenbrock(self):
         f_rosenbrock = lambda x: np.sum([
             ((x[i + 1]  - x[i] ** 2) ** 2 + (1 - x[i])** 2) / len(x)
             for i in range(len(x) - 1)
         ])
-        hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_rosenbrock)
+        hh_opt = self.optimizer_class(['x', 'y', 'z', 'a'], fitness_function=f_rosenbrock)
         hh_opt()
 
 
-    def test_pso_perf_test_multiple_short(self):
+    def test_perf_test_multiple_short(self):
         # Define our experiment
         n_trials = 20 # Times we repeat the set of experiments
         n_exp = 100 # Number of experiments in the set
@@ -90,124 +94,22 @@ class TestPSO(DerandomizedTestCase):
         params = ['base', 'scale']
 
         #Fitness function to evaluate the performance of the experiment
-        hh_opt = ParticleSwarmOptimizer(params,
-                                        n_trials = n_trials,
-                                        n_particles = n_particles,
-                                        prior = prior,
-                                        model = model,
-                                        n_exp = n_exp,
-                                        heuristic_class = heuristic_class
-                                       )
+        hh_opt = self.optimizer_class(params,
+                                      n_trials=n_trials,
+                                      n_particles=n_particles,
+                                      prior=prior,
+                                      model=model,
+                                      n_exp=n_exp,
+                                      heuristic_class=heuristic_class
+                                     )
         hh_opt(n_pso_iterations=5,
-                n_pso_particles=6)
+               n_pso_particles=6)
 
-def TestPSSAO(DerandomizedTestCase):
+class TestPSO(DerandomizedTestCase, OptimizerTestMethods):
+    optimizer_class = ParticleSwarmOptimizer
 
-    def test_pssao_quad(self):
-        f_quad = lambda x: numpy.sum(10 * (x-0.5)**2)
-        hh_opt = ParticleSwarmSimpleAnnealingOptimizer(['x','y','z','a'], fitness_function = f_quad)
-        hh_opt()
+class TestPSSAO(DerandomizedTestCase, OptimizerTestMethods):
+    optimizer_class = ParticleSwarmSimpleAnnealingOptimizer
 
-    def test_pssao_sin_sq(self):
-        f_sin_sq = lambda x: numpy.sum(np.sin(x - 0.2)**2)
-        hh_opt = ParticleSwarmSimpleAnnealingOptimizer(['x','y','z','a'], fitness_function = f_sin_sq)
-        hh_opt()
-
-    def test_pssao_rosenbrock(self):
-        f_rosenbrock = lambda x: numpy.sum([((x[i+1]  - x[i]**2)**2 + (1 - x[i])**2)/len(x) for i in range(len(x)-1)])
-        hh_opt = ParticleSwarmSimpleAnnealingOptimizer(['x','y','z','a'], fitness_function = f_rosenbrock)
-        hh_opt()
-
-
-    def test_pssao_perf_test_multiple_short(self):
-        # Define our experiment
-        n_trials = 20 # Times we repeat the set of experiments
-        n_exp = 150 # Number of experiments in the set
-        n_particles = 4000 # Number of points we track during the experiment
-
-        # Model for the experiment
-        model = rb.RandomizedBenchmarkingModel()
-
-        #Ordering of RB is 'p', 'A', 'B'
-        # A + B < 1, 0 < p < 1
-        #Prior distribution of the experiment
-        prior = dist.PostselectedDistribution(
-            dist.MultivariateNormalDistribution(mean=[0.5,0.1,0.25], cov=np.diag([0.1, 0.1, 0.1])),
-            model
-        )
-
-        #Heuristic used in the experiment
-        heuristic_class = qi.expdesign.ExpSparseHeuristic
-
-        #Heuristic Parameters
-        params = ['base', 'scale']
-
-        #Fitness function to evaluate the performance of the experiment
-        EXPERIMENT_FITNESS = lambda performance: performance['loss'][:,-1].mean(axis=0)
-
-        hh_opt = ParticleSwarmSimpleAnnealingOptimizer(params,
-                                        n_trials = n_trials,
-                                        n_particles = n_particles,
-                                        prior = prior,
-                                        model = model,
-                                        n_exp = n_exp,
-                                        heuristic_class = heuristic_class
-                                       )
-        hh_opt(n_pso_iterations=5,
-                n_pso_particles=6)
-
-
-def TestPSTO(DerandomizedTestCase):
-
-    def test_psto_quad(self):
-        f_quad = lambda x: numpy.sum(10 * (x-0.5)**2)
-        hh_opt = ParticleSwarmTemperingOptimizer(['x','y','z','a'], fitness_function = f_quad)
-        hh_opt()
-
-    def test_psto_sin_sq(self):
-        f_sin_sq = lambda x: numpy.sum(np.sin(x - 0.2)**2)
-        hh_opt = ParticleSwarmTemperingOptimizer(['x','y','z','a'], fitness_function = f_sin_sq)
-        hh_opt()
-
-    def test_psto_rosenbrock(self):
-        f_rosenbrock = lambda x: numpy.sum([((x[i+1]  - x[i]**2)**2 + (1 - x[i])**2)/len(x) for i in range(len(x)-1)])
-        hh_opt = ParticleSwarmTemperingOptimizer(['x','y','z','a'], fitness_function = f_rosenbrock)
-        hh_opt()
-
-
-    def test_psto_perf_test_multiple_short(self):
-        # Define our experiment
-        n_trials = 20 # Times we repeat the set of experiments
-        n_exp = 150 # Number of experiments in the set
-        n_particles = 4000 # Number of points we track during the experiment
-
-        # Model for the experiment
-        model = rb.RandomizedBenchmarkingModel()
-
-        #Ordering of RB is 'p', 'A', 'B'
-        # A + B < 1, 0 < p < 1
-        #Prior distribution of the experiment
-        prior = dist.PostselectedDistribution(
-            dist.MultivariateNormalDistribution(mean=[0.5,0.1,0.25], cov=np.diag([0.1, 0.1, 0.1])),
-            model
-        )
-
-        #Heuristic used in the experiment
-        heuristic_class = qi.expdesign.ExpSparseHeuristic
-
-        #Heuristic Parameters
-        params = ['base', 'scale']
-
-        #Fitness function to evaluate the performance of the experiment
-        EXPERIMENT_FITNESS = lambda performance: performance['loss'][:,-1].mean(axis=0)
-
-        hh_opt = ParticleSwarmTemperingOptimizer(params,
-                                        n_trials = n_trials,
-                                        n_particles = n_particles,
-                                        prior = prior,
-                                        model = model,
-                                        n_exp = n_exp,
-                                        heuristic_class = heuristic_class
-                                       )
-        hh_opt(n_pso_iterations=5,
-                n_pso_particles=6)
+class TestPSTO(DerandomizedTestCase, OptimizerTestMethods):
+    optimizer_class = ParticleSwarmTemperingOptimizer
