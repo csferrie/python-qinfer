@@ -35,27 +35,30 @@ from functools import partial
 import numpy as np
 import random as rnd
 
+from qinfer.tests.base_test import DerandomizedTestCase
+
 import qinfer.rb as rb
 import qinfer.distributions as dist
 
-from qinfer.tests.base_test import DerandomizedTestCase
+from qinfer.hyper_heuristic_optimisers import ParticleSwarmOptimizer
+from qinfer.expdesign import ExpSparseHeuristic
 
 ## CLASSES ####################################################################
 
 class TestPSO(DerandomizedTestCase):
 
     def test_pso_quad(self):
-        f_quad = lambda x: numpy.sum(10 * (x - 0.5) ** 2)
+        f_quad = lambda x: np.sum(10 * (x - 0.5) ** 2)
         hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_quad)
         hh_opt()
 
     def test_pso_sin_sq(self):
-        f_sin_sq = lambda x: numpy.sum(np.sin(x - 0.2) ** 2)
+        f_sin_sq = lambda x: np.sum(np.sin(x - 0.2) ** 2)
         hh_opt = ParticleSwarmOptimizer(['x', 'y', 'z', 'a'], fitness_function=f_sin_sq)
         hh_opt()
 
     def test_pso_rosenbrock(self):
-        f_rosenbrock = lambda x: numpy.sum([
+        f_rosenbrock = lambda x: np.sum([
             ((x[i + 1]  - x[i] ** 2) ** 2 + (1 - x[i])** 2) / len(x)
             for i in range(len(x) - 1)
         ])
@@ -81,14 +84,12 @@ class TestPSO(DerandomizedTestCase):
         )
 
         #Heuristic used in the experiment
-        heuristic_class = qi.expdesign.ExpSparseHeuristic
+        heuristic_class = ExpSparseHeuristic
 
         #Heuristic Parameters
         params = ['base', 'scale']
 
         #Fitness function to evaluate the performance of the experiment
-        EXPERIMENT_FITNESS = lambda performance: performance['loss'][:,-1].mean(axis=0)
-
         hh_opt = ParticleSwarmOptimizer(params,
                                         n_trials = n_trials,
                                         n_particles = n_particles,
