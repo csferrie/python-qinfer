@@ -79,6 +79,17 @@ class Optimizer(object):
     def parallel(self):
         raise NotImplementedError("This optimizer does not have parallel support.")
 
+    def evaluate_fitness(self, particles, apply=apply):
+        fitness_function = partial(self.fitness_function)
+        #fitness = map(self.fitness_function, particles)
+        results = [apply(self.fitness_function, particle) for particle in particles]
+        fitness = [result.get() for result in results]
+        return fitness
+
+    def update_positions(self, positions, velocities):
+        updated = positions + velocities
+        return updated
+
 class ParticleSwarmOptimizer(Optimizer):
     '''
         A particle swarm optimisation based hyperheuristic
@@ -168,17 +179,6 @@ class ParticleSwarmOptimizer(Optimizer):
                 omega_v, phi_p, phi_g)
 
         return global_attractor
-
-    def evaluate_fitness(self, particles, apply=apply):
-        fitness_function = partial(self.fitness_function)
-        #fitness = map(self.fitness_function, particles)
-        results = [apply(self.fitness_function, particle) for particle in particles]
-        fitness = [result.get() for result in results]
-        return fitness
-        
-    def update_positions(self, positions, velocities):
-        updated = positions + velocities
-        return updated
 
     def update_velocities(self, positions, velocities, local_attractors, global_attractor, omega_v, phi_p, phi_g):
         random_p = np.random.random_sample(positions.shape)
@@ -443,6 +443,92 @@ class ParticleSwarmTemperingOptimizer(ParticleSwarmOptimizer):
                     np.append(temper_map[random.randrange(0, n_temper_categories)], [particle_indicies[i]]))
 
         return temper_map
+
+
+class SPSATwoSiteOptimizer(Optimizer):
+
+    def __call__(self,
+        n_spsa_iterations = 60,
+        n_spsa_particles = 50,
+        initial_position_distribution = None,
+        A = 0,
+        s = 1/3,
+        t = 1,
+        a = 0.5,
+        b = 0.5,
+        apply=apply_serial
+        ):
+
+        self._fitness = np.empty([n_spsa_iterations, n_spsa_particles], dtype=self.fitness_dt())
+
+        if initial_position_distribution is None:
+            initial_position_distribution = distributions.UniformDistribution(np.array([[ 0, 1]] * self._n_free_params));
+              
+        # Initial particle positions
+        self._fitness[0]["params"] = initial_position_distribution.sample(n_spsa_particles)
+            
+        # Apply the boundary conditions if any exist
+        if self._boundary_map is not None:
+            self._fitness[itr]["params"] = self._boundary_map(self._fitness[itr]["params"])
+
+        # Calculate the initial particle fitnesses
+        self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
+                                                            apply=apply)
+
+        for itr in range(1, n_spsa_iterations):
+
+            # Helper functions to determine the update
+            delta_k = self.delta(n_spsa_particles, self._n_free_params)
+            first_site = np.vstack(
+                self.evaluate_fitness(
+                    self._fitness[itr-1]["params"] - self.alpha(itr, a, A, s)*delta_k,
+                    apply=apply))
+            second_site = np.vstack(
+                self.evaluate_fitness(
+                    self._fitness[itr-1]["params"] + self.alpha(itr, a, A, s)*delta_k,
+                    apply=apply))
+
+            # Determine the update velocity
+            self._fitness[itr - 1]["velocities"] = self.update_velocities(first_site, 
+                                                                second_site, 
+                                                                self.alpha(itr, a, A, s),
+                                                                self.beta(itr, b, t),
+                                                                delta_k)
+
+            # Update the SPSA particle positions
+            self._fitness[itr]["params"] = self.update_positions(
+                self._fitness[itr - 1]["params"], 
+                self._fitness[itr - 1]["velocities"])
+
+            # Apply the boundary conditions if any exist
+            if self._boundary_map is not None:
+                self._fitness[itr]["params"] = self._boundary_map(self._fitness[itr]["params"])
+
+            # Calculate the fitness of the new positions
+            self._fitness[itr]["fitness"] = self.evaluate_fitness(self._fitness[itr]["params"], 
+                                                            apply=apply)
+
+        return self._fitness[n_spsa_iterations - 1][np.argmin(self._fitness[n_spsa_iterations - 1]['fitness'])]
+
+
+    def alpha(self, k, a, A, s):
+        return a / (1 + A + k)**s
+
+    def beta(self, k, b, t):
+        return b / (1 + k)**t
+
+    def delta(self, n_particles, n_params):
+        return (2 * np.round(np.random.random((n_particles, n_params)))) - 1
+
+    def update_velocities(self, first_site, second_site, alpha, beta, delta):
+        return delta * beta * (first_site - second_site) / (2* alpha)
+    
+    def fitness_dt(self):
+        return np.dtype([
+            ('params', np.float64, (self._n_free_params,)),
+            ('velocities', np.float64, (self._n_free_params,)),
+            ('fitness', np.float64)])
+
             
 class HeuristicPerformanceFitness(object):
     def __init__(self, 
