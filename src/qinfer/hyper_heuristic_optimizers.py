@@ -137,7 +137,7 @@ class ParticleSwarmOptimizer(Optimizer):
             
         # Apply the boundary conditions if any exist
         if self._boundary_map is not None:
-            self._fitness[0]["params"] = self._boundary_map(self._fitness[itr]["params"])
+            self._fitness[0]["params"] = self._boundary_map(self._fitness[0]["params"])
 
         # Calculate the initial particle fitnesses
         self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
@@ -238,7 +238,7 @@ class ParticleSwarmSimpleAnnealingOptimizer(ParticleSwarmOptimizer):
             
         # Apply the boundary conditions if any exist
         if self._boundary_map is not None:
-            self._fitness[0]["params"] = self._boundary_map(self._fitness[itr]["params"])
+            self._fitness[0]["params"] = self._boundary_map(self._fitness[0]["params"])
 
         # Calculate the initial particle fitnesses
         self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
@@ -349,7 +349,7 @@ class ParticleSwarmTemperingOptimizer(ParticleSwarmOptimizer):
             
         # Apply the boundary conditions if any exist
         if self._boundary_map is not None:
-            self._fitness[0]["params"] = self._boundary_map(self._fitness[itr]["params"])
+            self._fitness[0]["params"] = self._boundary_map(self._fitness[0]["params"])
 
         # Calculate the initial particle fitnesses
         self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
@@ -472,14 +472,14 @@ class SPSATwoSiteOptimizer(Optimizer):
         self._fitness = np.empty([n_spsa_iterations, n_spsa_particles], dtype=self.fitness_dt())
 
         if initial_position_distribution is None:
-            initial_position_distribution = distributions.UniformDistribution(np.array([[ 0, 1]] * self._n_free_params));
+            initial_position_distribution = distributions.UniformDistribution(np.array([[0, 1]] * self._n_free_params));
               
         # Initial particle positions
         self._fitness[0]["params"] = initial_position_distribution.sample(n_spsa_particles)
             
         # Apply the boundary conditions if any exist
         if self._boundary_map is not None:
-            self._fitness[0]["params"] = self._boundary_map(self._fitness[itr]["params"])
+            self._fitness[0]["params"] = self._boundary_map(self._fitness[0]["params"])
 
         # Calculate the initial particle fitnesses
         self._fitness[0]["fitness"] = self.evaluate_fitness(self._fitness[0]["params"], 
