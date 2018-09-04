@@ -42,8 +42,12 @@ from __future__ import division
 ## IMPORTS ####################################################################
 
 from builtins import range
+from importlib import import_module
+from functools import wraps
+from distutils.version import LooseVersion
 
 import warnings
+import unittest
 
 import numpy as np
 import numpy.linalg as la
@@ -61,6 +65,57 @@ from qinfer._exceptions import ApproximationWarning
 
 ## FUNCTIONS ##################################################################
 
+def get_optional_module(module_name, required_version=None):
+    """
+    Attempts to load an optional module, silently returning
+    ``None`` if the module is missing or is not of the required
+    version.
+    """
+    try:
+        module = import_module(module_name)
+        if (
+            required_version is not None and
+            module.__version__ < LooseVersion(required_version)
+        ):
+            return None
+    except (ImportError, AttributeError):
+        return None
+
+    return module
+
+
+def requires_optional_module(module_name, required_version=None, if_missing='raise'):
+    # TODO: document
+
+    def decorator(fn):
+        if get_optional_module(module_name, required_version) is not None:
+            return fn
+        else:
+            msg = (
+                "Function {} requires version {} of the optional module "
+                "{}, which was not found.".format(
+                    fn.__name__, required_version, module_name
+                )
+                if required_version is not None else
+                "Function {} requires the optional module {}, which was "
+                "not found.".format(
+                    fn.__name__, module_name
+                )
+            )
+
+            if if_missing == "raise":
+                @wraps(fn)
+                def dummy_fn(*args, **kwwargs):
+                    raise ImportError(msg)
+
+                return dummy_fn
+
+            elif if_missing == "skip":
+                return unittest.skip(msg)
+
+    return decorator
+
+# FIXME: generalize to use above *_optional_module functions.
 def get_qutip_module(required_version='3.2'):
     """
     Attempts to return the qutip module, but
@@ -286,6 +341,7 @@ def particle_covariance_mtx(weights,locations):
 
     return cov
 
+# FIXME: move ellipsoid_volume, mvee, and in_ellipsoid to geometry.py.
 
 def ellipsoid_volume(A=None, invA=None):
     """
