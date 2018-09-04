@@ -369,7 +369,7 @@ class LiuWestResampler(Resampler):
             # This may look a little weird, but it should delete the unused
             # elements of js, so that we don't need to reallocate.
             js = js[np.logical_not(valid_mask)]
-            mus = mus[:idxs_to_resample.size, :]
+            mus = mus[idxs_to_resample, :]
 
         if idxs_to_resample.size:
             # We failed to force all models to be valid within maxiter attempts.
