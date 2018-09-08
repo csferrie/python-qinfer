@@ -34,7 +34,6 @@
 ##
 
 from __future__ import absolute_import
-from qinfer.version import version as __version__
 
 ## CITATION METADATA ##########################################################
 
