@@ -329,7 +329,8 @@ class LiuWestResampler(Resampler):
             n_iters += 1
 
             # Draw x_i from N(mu_i, S).
-            new_locs[idxs_to_resample, :] = mus + np.dot(S, self._kernel(n_rvs, mus.shape[0])).T
+            mus_temp = mus[idxs_to_resample, :]
+            new_locs[idxs_to_resample, :] = mus_temp + np.dot(S, self._kernel(n_rvs, mus_temp.shape[0])).T
 
             # Now we remove from the list any valid models.
             # We write it out in a longer form than is strictly necessary so
@@ -369,7 +370,7 @@ class LiuWestResampler(Resampler):
             # This may look a little weird, but it should delete the unused
             # elements of js, so that we don't need to reallocate.
             js = js[np.logical_not(valid_mask)]
-            mus = mus[:idxs_to_resample.size, :]
+
 
         if idxs_to_resample.size:
             # We failed to force all models to be valid within maxiter attempts.
