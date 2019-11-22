@@ -393,9 +393,16 @@ class ParticleDistribution(Distribution):
         # positive-semidefinite covariance matrix. If a negative eigenvalue
         # is produced, we should warn the caller of this.
         assert np.all(np.isfinite(cov))
-        if not np.all(la.eig(cov)[0] >= 0):
-            warnings.warn('Numerical error in covariance estimation causing positive semidefinite violation.', ApproximationWarning)
-
+        vals, vecs = la.eig(cov)
+        small_vals = abs(vals) < 1e-12
+        vals[small_vals] = 0
+        if not np.all(vals >= 0):
+            warnings.warn(
+                'Numerical error in covariance estimation causing positive semidefinite violation.',
+                ApproximationWarning
+            )
+        if np.any(small_vals):
+            return (vecs * vals) @ vecs.T.conj()
         return cov
 
     def est_mean(self):
@@ -1007,12 +1014,12 @@ class BetaDistribution(Distribution):
 
     def sample(self, n=1):
         return self.dist.rvs(size=n)[:, np.newaxis]
-        
+
 class DirichletDistribution(Distribution):
     r"""
     The dirichlet distribution, whose pdf at :math:`x` is proportional to
     :math:`\prod_i x_i^{\alpha_i-1}`.
-    
+
     :param alpha: The list of concentration parameters.
     """
     def __init__(self, alpha):
@@ -1021,7 +1028,7 @@ class DirichletDistribution(Distribution):
             raise ValueError('The input alpha must be a 1D list of concentration parameters.')
 
         self._dist = st.dirichlet(alpha=self.alpha)
-        
+
     @property
     def alpha(self):
         return self._alpha
