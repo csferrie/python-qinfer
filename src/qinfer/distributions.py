@@ -394,14 +394,14 @@ class ParticleDistribution(Distribution):
         # is produced, we should warn the caller of this.
         assert np.all(np.isfinite(cov))
         vals, vecs = la.eig(cov)
-        small_vals = abs(vals) < 1e-12
-        vals[small_vals] = 0
+        small_negative_vals = (vals < 0) & (vals > -1e-12)
+        vals[small_negative_vals] = 0
         if not np.all(vals >= 0):
             warnings.warn(
                 'Numerical error in covariance estimation causing positive semidefinite violation.',
                 ApproximationWarning
             )
-        if np.any(small_vals):
+        if np.any(small_negative_vals):
             return (vecs * vals) @ vecs.T.conj()
         return cov
 
